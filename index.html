@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="fr" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Cours de français | Tableau de bord</title>
+<meta name="theme-color" content="#0055A4" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="1.jpg" />
+<link rel="apple-touch-icon" href="1.jpg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Cairo', 'system-ui', 'sans-serif'] },
+        colors: {
+          ita: {
+            green: '#0055A4', greenDark: '#003f7d', greenLight: '#e8f1fb',
+            red:   '#EF4135', redDark:   '#c92f25', redLight:   '#fdebea'
+          }
+        },
+        boxShadow: {
+          soft: '0 1px 2px rgba(16,24,40,.04), 0 8px 24px -8px rgba(16,24,40,.12)',
+          big:  '0 20px 50px -20px rgba(0,0,0,.28)'
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem; border-radius: 1rem; padding: 0.625rem 1rem;
+    font-size: 0.875rem; font-weight: 800; transition: all 0.2s ease;
+    outline: none; user-select: none; cursor: pointer; border: none;
+    font-family: inherit; line-height: 1;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn:focus { outline: none; }
+
+  .btn-green { background-color: #0055A4; color: #fff; box-shadow: 0 10px 15px -3px rgba(0,85,164,.25), 0 4px 6px -4px rgba(0,85,164,.25); }
+  .btn-green:hover { background-color: #003f7d; }
+  .btn-green:active { transform: scale(0.98); }
+
+  .btn-red { background-color: #EF4135; color: #fff; box-shadow: 0 10px 15px -3px rgba(239,65,53,.25), 0 4px 6px -4px rgba(239,65,53,.25); }
+  .btn-red:hover { background-color: #c92f25; }
+  .btn-red:active { transform: scale(0.98); }
+
+  .btn-blue { background-color: #2563eb; color: #fff; box-shadow: 0 10px 15px -3px rgba(37,99,235,.25), 0 4px 6px -4px rgba(37,99,235,.25); }
+  .btn-blue:hover { background-color: #1d4ed8; }
+  .btn-blue:active { transform: scale(0.98); }
+
+  .btn-purple { background-color: #7c3aed; color: #fff; box-shadow: 0 10px 15px -3px rgba(124,58,237,.25), 0 4px 6px -4px rgba(124,58,237,.25); }
+  .btn-purple:hover { background-color: #6d28d9; }
+  .btn-purple:active { transform: scale(0.98); }
+
+  .btn-teal { background-color: #0d9488; color: #fff; box-shadow: 0 10px 15px -3px rgba(13,148,136,.25), 0 4px 6px -4px rgba(13,148,136,.25); }
+  .btn-teal:hover { background-color: #0f766e; }
+  .btn-teal:active { transform: scale(0.98); }
+
+  .btn-white { background-color: #fff; color: #1e293b; border: 2px solid #e2e8f0; }
+  .btn-white:hover { border-color: #cbd5e1; background-color: #f8fafc; }
+
+  .input {
+    width: 100%; border-radius: 1rem; border: 2px solid #e2e8f0;
+    background-color: #fff; padding: 0.75rem 1rem; font-size: 0.875rem;
+    color: #1e293b; outline: none; transition: all 0.2s ease; font-family: inherit;
+  }
+  .input::placeholder { color: #94a3b8; }
+  .input:focus { border-color: #0055A4; box-shadow: 0 0 0 4px rgba(0,85,164,.1); }
+
+  .label { display: block; margin-bottom: 0.375rem; font-size: 13px; font-weight: 800; color: #334155; }
+
+  .card {
+    border-radius: 1.5rem; background-color: #fff;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px -8px rgba(16,24,40,.12);
+  }
+
+  .th {
+    padding: 0.75rem 1rem; text-align: right; font-size: 12px;
+    font-weight: 800; color: #64748b; text-transform: uppercase;
+    white-space: nowrap; background-color: rgba(248,250,252,.8);
+  }
+
+  .td {
+    padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155;
+    white-space: nowrap; border-top: 1px solid #f1f5f9;
+  }
+
+  /* حقول Examens الكبيرة */
+  .exam-input {
+    width: 100%; border-radius: 1rem; padding: 1.5rem 1.25rem;
+    font-size: 2.5rem; font-weight: 900; text-align: center;
+    outline: none; transition: all 0.2s ease; font-family: inherit;
+    line-height: 1; border: 3px solid #e2e8f0; background-color: #f8fafc;
+  }
+  .exam-input::placeholder { color: #cbd5e1; font-size: 1.5rem; font-weight: 800; }
+  .exam-input-total { border-color: #99f6e4; background-color: #f0fdfa; color: #115e59; }
+  .exam-input-total:focus { border-color: #0d9488; box-shadow: 0 0 0 5px rgba(13,148,136,.12); }
+  .exam-input-score { border-color: #fecdd3; background-color: #fff1f2; color: #c92f25; }
+  .exam-input-score:focus { border-color: #EF4135; box-shadow: 0 0 0 5px rgba(239,65,53,.12); }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; }
+</style>
+
+<style>
+  *{ -webkit-tap-highlight-color: transparent; }
+  html{ scroll-behavior:smooth; }
+  body{ font-family:'Cairo',system-ui,sans-serif; }
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:9999px; }
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes popIn{ from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+  @keyframes slideDown{ from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
+  .anim-fade{ animation:fadeUp .35s ease both; }
+  .anim-pop { animation:popIn .22s ease both; }
+  .anim-slide{ animation:slideDown .22s ease both; }
+  .pulse-dot{ animation:pulse 1.8s cubic-bezier(.4,0,.6,1) infinite; }
+
+  .flag-strip {
+    background: linear-gradient(to left,
+      #0055A4 0%, #0055A4 33.33%,
+      #ffffff 33.33%, #ffffff 66.66%,
+      #EF4135 66.66%, #EF4135 100%);
+  }
+  .copy-text { user-select: all; }
+</style>
+
+<style>
+  /* ==========================================================
+     🇫🇷 French visual layer — additive only
+     لا يحذف أو يستبدل أي من وظائف الموقع الأصلية
+     ========================================================== */
+  .france-theme {
+    --fr-blue: #0055A4;
+    --fr-red: #EF4135;
+  }
+  .france-stripe {
+    background: linear-gradient(to right,
+      #0055A4 0%, #0055A4 33.33%,
+      #ffffff 33.33%, #ffffff 66.66%,
+      #EF4135 66.66%, #EF4135 100%);
+  }
+  .france-brand-btn {
+    border: 2px solid rgba(0,85,164,.18);
+    background: linear-gradient(135deg,#fff,#f7fbff);
+    color: #0f172a;
+  }
+  .france-brand-btn:hover {
+    border-color: #0055A4;
+    box-shadow: 0 16px 35px -18px rgba(0,85,164,.45);
+    transform: translateY(-1px);
+  }
+  #brandHeaderImage {
+    display: none;
+    width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    border-radius: 0 0 1.25rem 1.25rem;
+    border-top: 1px solid #e2e8f0;
+  }
+  .brand-upload-preview {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 1rem;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+  }
+</style>
+
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen france-theme">
+
+<!-- ============ bannière ============ -->
+<header class="sticky top-0 z-40 bg-white shadow-sm">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="flex items-center justify-between h-16 gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <img id="siteLogo" src="1.jpg" alt="Logo du site"
+          class="w-11 h-11 rounded-2xl object-cover ring-2 ring-ita-green/20 shadow-sm"
+          onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect width=%2280%22 height=%2280%22 rx=%2218%22 fill=%22%23009246%22/><text x=%2240%22 y=%2252%22 font-size=%2234%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22>IT</text></svg>'">
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight truncate">Cours de français</h1>
+          <p class="text-[11px] text-slate-500 leading-tight">Tableau de bord</p>
+        <p class="text-[10px] text-blue-700 font-black mt-0.5">Monsieur Wael Anwar</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="hidden sm:inline-block text-[10px] font-black text-slate-400 uppercase tracking-widest">French Course</span>
+        <div class="w-6 h-6 rounded-full flag-strip ring-1 ring-slate-200 shadow-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full border-t border-slate-100 bg-slate-50/80">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-10 flex items-center justify-between gap-3 text-[12px] font-bold">
+      <div class="flex items-center gap-2">
+        <span id="dotConn" class="w-2.5 h-2.5 rounded-full bg-slate-400 pulse-dot"></span>
+        <span id="txtConn" class="text-slate-600">Connexion à la base de données...</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-slate-500">Nombre d’élèves : <span id="txtCount" class="text-ita-green font-black">0</span></span>
+      </div>
+    </div>
+    <div class="h-1 flag-strip"></div>
+  </div>
+  <img id="brandHeaderImage" alt="Bannière du site">
+</header>
+
+<div id="frenchTopBanner" class="france-stripe h-2 w-full shadow-sm"></div>
+
+  <!-- ============ المحتوى ============ -->
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-28">
+
+  <!-- ============ الرئيسية ============ -->
+  <section id="viewHome" class="anim-fade">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl sm:text-3xl font-black text-slate-900">مرحبًا بك في Tableau de bord 👋</h2>
+      <p class="text-slate-500 font-semibold mt-2 text-sm sm:text-base">Choisissez une opération</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <button id="btnExcel" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-ita-green"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-ita-greenLight text-ita-green grid place-items-center text-2xl">📥</div>
+          <span class="bg-ita-greenLight text-ita-green rounded-full px-2.5 py-1 text-[10px] font-black">1</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Importer un fichier Excel</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          ارفع ملف فيه <b class="text-ita-green">4 أعمدة</b>: الاسم، اليوم والساعة، المرحلة، الكود.
+        </p>
+      </button>
+
+      <button id="btnSession" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-ita-red"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-ita-redLight text-ita-red grid place-items-center text-2xl">📝</div>
+          <span class="bg-ita-redLight text-ita-red rounded-full px-2.5 py-1 text-[10px] font-black">2</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Enregistrer un cours</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          Présent/Absent، <b class="text-ita-red">Devoir fait</b>، الشيت، والتاريخ + وقت تلقائي.
+        </p>
+      </button>
+
+      <button id="btnExam" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-teal-600"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-teal-50 text-teal-600 grid place-items-center text-2xl">🏆</div>
+          <span class="bg-teal-50 text-teal-600 rounded-full px-2.5 py-1 text-[10px] font-black">3</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Examens</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          بحث عن الطالب → من كام → جاب كام → حفظ.
+        </p>
+      </button>
+
+      <button id="btnStudents" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-blue-600"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-blue-50 text-blue-600 grid place-items-center text-2xl">📋</div>
+          <span class="bg-blue-50 text-blue-600 rounded-full px-2.5 py-1 text-[10px] font-black">4</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Données des élèves</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          كل المجموعات باليوم والساعة والمرحلة — اضغط الطالب تشوف بياناته.
+        </p>
+      </button>
+
+      <button id="btnBehavior" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-purple-600"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-purple-50 text-purple-600 grid place-items-center text-2xl">🎭</div>
+          <span class="bg-purple-50 text-purple-600 rounded-full px-2.5 py-1 text-[10px] font-black">5</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Comportement</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          شاشة كاملة لكل المجموعات — سجّل سلوكيات Élèves.
+        </p>
+      </button>
+
+      <button id="btnRecords" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-amber-500"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-amber-50 text-amber-600 grid place-items-center text-2xl">📊</div>
+          <span class="bg-amber-50 text-amber-600 rounded-full px-2.5 py-1 text-[10px] font-black">6</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Tous les cours</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          Tous les cours المسجّلة — فلترة بالشهر والطالب.
+        </p>
+      </button>
+
+      <button id="btnExamsList" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-teal-700"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-teal-50 text-teal-700 grid place-items-center text-2xl">🏅</div>
+          <span class="bg-teal-50 text-teal-700 rounded-full px-2.5 py-1 text-[10px] font-black">7</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">كل Examensات</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          كل درجات Examensات المسجّلة لكل Élèves.
+        </p>
+      </button>
+
+      <button id="btnDelete" class="card p-6 text-right hover:shadow-big hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5 bg-slate-700"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="w-14 h-14 rounded-3xl bg-slate-100 text-slate-700 grid place-items-center text-2xl">🗑️</div>
+          <span class="bg-slate-100 text-slate-600 rounded-full px-2.5 py-1 text-[10px] font-black">8</span>
+        </div>
+        <h3 class="mt-4 text-lg font-black text-slate-900">Supprimer les données</h3>
+        <p class="mt-1.5 text-[13px] text-slate-500 font-semibold leading-relaxed">
+          امسح <b>Élèves</b> أو <b>Cours</b> أو <b>Comportementيات</b> أو <b>Examensات</b>.
+        </p>
+      </button>
+    </div>
+
+    <!-- ============ Identité française + Gérer logo وbannière ============ -->
+    <div class="mt-6">
+      <button id="btnBranding" type="button"
+        class="card france-brand-btn w-full p-5 text-right transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 h-full w-1.5" style="background:linear-gradient(to bottom,#0055A4 0 33%,#fff 33% 66%,#EF4135 66% 100%)"></div>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-14 h-14 rounded-3xl bg-slate-50 grid place-items-center text-2xl">🇫🇷</div>
+            <div class="min-w-0">
+              <h3 class="text-lg font-black text-slate-900">Identité française</h3>
+              <p class="mt-1 text-[13px] text-slate-500 font-semibold">
+                Changer le logo أو bannière ورفع الملف مباشرةً إلى Firebase ليظهر في الموقع الآخر.
+              </p>
+            </div>
+          </div>
+          <span class="shrink-0 rounded-full bg-slate-900 text-white px-3 py-2 text-xs font-black">Gérer</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div class="card p-4">
+        <p class="text-[11px] font-black text-slate-400 uppercase">Élèves</p>
+        <p id="miniStudents" class="text-2xl font-black text-slate-900 mt-1">0</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-[11px] font-black text-slate-400 uppercase">Cours</p>
+        <p id="miniSessions" class="text-2xl font-black text-slate-900 mt-1">0</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-[11px] font-black text-slate-400 uppercase">Examensات</p>
+        <p id="miniExams" class="text-2xl font-black text-teal-700 mt-1">0</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-[11px] font-black text-slate-400 uppercase">Cours du mois</p>
+        <p id="miniMonthSessions" class="text-2xl font-black text-slate-900 mt-1">0</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-[11px] font-black text-slate-400 uppercase">Revenus du mois</p>
+        <p id="miniMonthMoney" class="text-2xl font-black text-ita-red mt-1">0</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ رفع Excel ============ -->
+  <section id="viewExcel" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="card p-6 sm:p-8">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-ita-greenLight text-ita-green grid place-items-center text-2xl">📥</div>
+        <div>
+          <h2 class="text-xl font-black text-slate-900">Importer un fichier Excel</h2>
+          <p class="text-[12px] text-slate-500 font-semibold">4 أعمدة: الاسم · اليوم والساعة · المرحلة · الكود</p>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 mb-5">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">💡</span>
+          <div class="flex-1">
+            <p class="font-black text-amber-900 text-sm">قبل ما ترفع الملف</p>
+            <p class="text-[12px] text-amber-800 font-semibold mt-1 leading-relaxed">
+              لازم الملف يكون فيه <b>4 أعمدة بالترتيب</b>:
+              اسم الطالب، اليوم والساعة، المرحلة (إعدادي/ثانوي)، الكود.
+              <br>
+              <b class="text-amber-900">🔑 صيغة الكود: ITA + 4 أرقام عشوائية (مثال: ITA4287) — يقبل ITA أو ita أو Ita</b>
+            </p>
+            <button id="showPromptBtn" class="btn btn-white !py-2 !px-3 mt-3 text-[12px] !border-amber-300">
+              📋 عرض نص جاهز لطلبه من ChatGPT/Claude
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <label id="dropArea" class="block border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center cursor-pointer hover:border-ita-green hover:bg-ita-greenLight/30 transition">
+        <input id="excelInput" type="file" accept=".xlsx,.xls,.csv" class="hidden">
+        <div class="w-16 h-16 mx-auto rounded-3xl bg-ita-greenLight text-ita-green grid place-items-center text-3xl mb-4">📄</div>
+        <p class="font-black text-slate-800">اسحب الملف هنا أو اضغط للاختيار</p>
+        <p class="text-[12px] text-slate-500 font-semibold mt-1">.xlsx · .xls · .csv</p>
+      </label>
+
+      <div id="previewBox" class="hidden mt-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-black text-slate-900">معاينة البيانات</h3>
+          <span id="previewCount" class="bg-slate-100 text-slate-700 rounded-full px-3 py-1 text-[11px] font-black">0 صف</span>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 overflow-hidden">
+          <div class="overflow-x-auto max-h-72">
+            <table class="w-full text-xs">
+              <thead class="sticky top-0">
+                <tr>
+                  <th class="th !py-2">#</th>
+                  <th class="th !py-2">الاسم</th>
+                  <th class="th !py-2">اليوم والساعة</th>
+                  <th class="th !py-2">المرحلة</th>
+                  <th class="th !py-2">الكود</th>
+                </tr>
+              </thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-5">
+          <button id="cancelImport" class="btn btn-white flex-1">إلغاء</button>
+          <button id="confirmImport" class="btn btn-green flex-1">✅ تأكيد الإضافة للداتابيز</button>
+        </div>
+      </div>
+
+      <div id="importResult" class="hidden mt-5"></div>
+    </div>
+  </section>
+
+  <!-- ============ Enregistrer un cours ============ -->
+  <section id="viewSession" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="grid lg:grid-cols-5 gap-5">
+      <div class="lg:col-span-3 space-y-5">
+
+        <div class="card p-6">
+          <h2 class="font-black text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-ita-greenLight text-ita-green grid place-items-center text-sm font-black">1</span>
+            اختر الطالب
+          </h2>
+
+          <div class="relative">
+            <input id="pickSearch" class="input pr-11" placeholder="اكتب الاسم أو الكود..." autocomplete="off">
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+            <div id="pickDropdown" class="hidden absolute z-30 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-2xl anim-slide"></div>
+          </div>
+
+          <div id="pickedCard" class="hidden mt-4 rounded-2xl border-2 border-ita-green/30 bg-ita-greenLight/40 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div id="pkAvatar" class="w-12 h-12 rounded-2xl bg-ita-green text-white grid place-items-center font-black text-lg shadow-lg shadow-ita-green/25"></div>
+                <div>
+                  <p id="pkName" class="font-black text-slate-900"></p>
+                  <p class="text-[12px] text-slate-600 font-bold">
+                    الكود: <span id="pkCode" class="font-mono bg-white px-1.5 py-0.5 rounded"></span>
+                  </p>
+                  <p class="text-[11px] text-slate-500 font-bold mt-0.5" id="pkMeta"></p>
+                </div>
+              </div>
+              <button id="clearPick" class="text-slate-400 hover:text-ita-red transition text-xl leading-none">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <h2 class="font-black text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-ita-redLight text-ita-red grid place-items-center text-sm font-black">2</span>
+            تفاصيل الحصة
+          </h2>
+
+          <div class="mb-5">
+            <label class="label">Présence</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" data-att="present" class="att-btn rounded-2xl border-2 border-slate-200 bg-white p-4 text-center transition">
+                <span class="block text-2xl mb-1">✅</span>
+                <span class="block font-black text-sm text-slate-700">Présent</span>
+              </button>
+              <button type="button" data-att="absent" class="att-btn rounded-2xl border-2 border-slate-200 bg-white p-4 text-center transition">
+                <span class="block text-2xl mb-1">❌</span>
+                <span class="block font-black text-sm text-slate-700">Absent</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-5">
+            <label class="label">📚 État du devoir</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button" data-hw="done" class="hw-btn rounded-2xl border-2 border-slate-200 bg-white p-4 text-center transition">
+                <span class="block text-2xl mb-1">📗</span>
+                <span class="block font-black text-sm text-slate-700">Devoir fait</span>
+              </button>
+              <button type="button" data-hw="not_done" class="hw-btn rounded-2xl border-2 border-slate-200 bg-white p-4 text-center transition">
+                <span class="block text-2xl mb-1">📕</span>
+                <span class="block font-black text-sm text-slate-700">Devoir non fait</span>
+              </button>
+            </div>
+
+            <div id="hwReasonBox" class="hidden mt-3 rounded-2xl border-2 border-rose-200 bg-rose-50/60 p-4">
+              <label class="label !text-rose-800" for="hwReasonInput">سبب عدم Devoir fait</label>
+              <select id="hwReasonInput" class="input !border-rose-200 focus:!border-rose-500 focus:!ring-rose-500/10">
+                <option value="">— اختر السبب —</option>
+                <option value="نسيت أDevoir fait">1) نسيت أDevoir fait</option>
+                <option value="مش فاهم الدرس">2) مش فاهم الدرس</option>
+                <option value="مكنش عندي وقت">3) مكنش عندي وقت</option>
+                <option value="كنت تعبان">4) كنت تعبان</option>
+                <option value="نسيت الكراسة في البيت">5) نسيت الكراسة في البيت</option>
+                <option value="مش فاهم المطلوب">6) مش فاهم المطلوب</option>
+                <option value="كنت في درس تاني">7) كنت في درس تاني</option>
+                <option value="مش عندي كتاب">8) مش عندي كتاب</option>
+                <option value="كنت مشغول في المدرسة">9) كنت مشغول في المدرسة</option>
+                <option value="حليت بس نسيت الكراسة">10) حليت بس نسيت الكراسة</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-5">
+            <label class="label" for="sheetInput">الشيت (المبلغ بالجنيه)</label>
+            <input id="sheetInput" type="number" min="0" step="5" class="input text-lg font-black" placeholder="0" value="0">
+            <div class="flex flex-wrap gap-2 mt-2">
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="0">لم يدفع</button>
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="40">40</button>
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="60">60</button>
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="80">80</button>
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="100">100</button>
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="120">120</button>
+              <button type="button" class="sheet-chip btn btn-white !py-1.5 !px-4 text-[12px]" data-sheet="150">150</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="dateInput">Date du cours</label>
+            <input id="dateInput" type="date" class="input">
+            <p class="text-[11px] text-slate-500 font-semibold mt-1.5">
+              ⏰ وقت التسجيل هيتم إضافته تلقائيًا (الساعة الحالية).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="card p-6 lg:sticky lg:top-32">
+          <h2 class="font-black text-slate-900 mb-4">ملخص التسجيل</h2>
+
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <span class="text-slate-500 font-bold">الطالب</span>
+              <span id="sumStudent" class="font-black text-slate-900 truncate max-w-[160px] text-left">—</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <span class="text-slate-500 font-bold">الحضور</span>
+              <span id="sumAtt" class="font-black text-slate-900">—</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <span class="text-slate-500 font-bold">الواجب</span>
+              <span id="sumHw" class="font-black text-slate-900">—</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <span class="text-slate-500 font-bold">الشيت</span>
+              <span id="sumSheet" class="font-black text-ita-green">—</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <span class="text-slate-500 font-bold">التاريخ</span>
+              <span id="sumDate" class="font-black text-slate-900">—</span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-slate-500 font-bold">⏰ وقت التسجيل</span>
+              <span id="sumTime" class="font-black text-blue-600 font-mono">—</span>
+            </div>
+          </div>
+
+          <button id="saveBtn" class="btn btn-green w-full py-4 mt-6 text-base">💾 Enregistrer le cours</button>
+          <button id="resetBtn" class="btn btn-white w-full mt-2">↺ Réinitialiser le formulaire</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Examens (بسيط جدًا) ============ -->
+  <section id="viewExam" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="max-w-2xl mx-auto">
+
+      <div class="card p-6 sm:p-7 mb-4">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 grid place-items-center text-2xl">🏆</div>
+          <div>
+            <h2 class="text-xl font-black text-slate-900">Enregistrer un examen</h2>
+            <p class="text-[12px] text-slate-500 font-semibold">Rechercher un élève — اكتب الدرجة — احفظ</p>
+          </div>
+        </div>
+
+        <!-- 1) بحث -->
+        <label class="label text-base">1️⃣ Rechercher un élève</label>
+        <div class="relative">
+          <input id="examSearch" class="input pr-11 !py-4 !text-base" placeholder="اكتب الاسم أو الكود..." autocomplete="off">
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
+          <div id="examDropdown" class="hidden absolute z-30 mt-2 w-full max-h-72 overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-2xl anim-slide"></div>
+        </div>
+      </div>
+
+      <!-- بطاقة الطالب + الحقول (تظهر بعد الاختيار) -->
+      <div id="examPickedCard" class="hidden">
+
+        <!-- بطاقة الطالب -->
+        <div class="card p-5 mb-4 border-2 border-teal-200">
+          <div class="flex items-center gap-4">
+            <div id="exAvatar" class="w-14 h-14 rounded-2xl bg-teal-600 text-white grid place-items-center font-black text-xl shadow-lg shadow-teal-600/25 shrink-0"></div>
+            <div class="min-w-0 flex-1">
+              <p id="exName" class="font-black text-slate-900 text-lg truncate"></p>
+              <p class="text-[13px] text-slate-600 font-bold">
+                الكود: <span id="exCode" class="font-mono bg-slate-100 px-1.5 py-0.5 rounded"></span>
+              </p>
+            </div>
+            <button id="examClearPick" class="w-9 h-9 rounded-xl hover:bg-red-50 text-slate-400 hover:text-ita-red transition grid place-items-center text-lg shrink-0">✕</button>
+          </div>
+
+          <div class="mt-4 rounded-xl bg-teal-50 border-2 border-teal-100 px-4 py-3">
+            <p class="text-[11px] font-black text-teal-700 uppercase">📅 المجموعة (تلقائي)</p>
+            <p id="exGroup" class="font-black text-slate-900 text-base mt-1">—</p>
+          </div>
+        </div>
+
+        <!-- 2) الدرجة الكلية -->
+        <div class="card p-6 mb-4">
+          <label class="label !text-base !text-teal-800 mb-3">2️⃣ Note maximale</label>
+          <input id="examTotal" type="number" min="0" step="0.5" inputmode="decimal"
+            class="exam-input exam-input-total" placeholder="من كام" value="">
+          <div class="flex flex-wrap gap-2 mt-4 justify-center">
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="5">من 5</button>
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="10">من 10</button>
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="15">من 15</button>
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="20">من 20</button>
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="30">من 30</button>
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="50">من 50</button>
+            <button type="button" class="exam-chip btn btn-white !py-2 !px-4 text-[13px] font-black" data-total="100">من 100</button>
+          </div>
+        </div>
+
+        <!-- 3) درجة الطالب -->
+        <div class="card p-6 mb-4">
+          <label class="label !text-base !text-ita-red mb-3">3️⃣ Note de l’élève</label>
+          <input id="examScore" type="number" min="0" step="0.5" inputmode="decimal"
+            class="exam-input exam-input-score" placeholder="جاب كام" value="">
+        </div>
+
+        <!-- ملخص + حفظ -->
+        <div class="card p-6">
+          <div class="rounded-2xl bg-gradient-to-l from-teal-50 to-white border-2 border-teal-100 p-5 mb-5 text-center">
+            <p class="text-[11px] font-black text-teal-700 uppercase">🎯 Résultat</p>
+            <p class="text-3xl font-black text-teal-800 mt-2" id="exLiveScore">—</p>
+            <p class="text-sm font-black text-teal-700 mt-1.5" id="exLivePct">—</p>
+          </div>
+
+          <button id="saveExamBtn" class="btn btn-teal w-full py-4 text-base">💾 حفظ Examens</button>
+          <button id="resetExamBtn" class="btn btn-white w-full mt-2">↺ Réinitialiser le formulaire</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Données des élèves ============ -->
+  <section id="viewStudents" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="card p-6 sm:p-8 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 grid place-items-center text-2xl">📋</div>
+        <div>
+          <h2 class="text-xl font-black text-slate-900">Données des élèves</h2>
+          <p class="text-[12px] text-slate-500 font-semibold">مجمّعين حسب اليوم والساعة — اضغط على أي طالب لعرض بياناته</p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <input id="studentsSearch" class="input !w-auto flex-1 min-w-[200px]" placeholder="ابحث عن طالب...">
+        <select id="studentsStageFilter" class="input !w-auto font-bold">
+          <option value="">كل المراحل</option>
+          <option value="إعدادي">إعدادي</option>
+          <option value="ثانوي">ثانوي</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="groupsContainer" class="space-y-4"></div>
+  </section>
+
+  <!-- ============ Comportement ============ -->
+  <section id="viewBehavior" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="card p-6 sm:p-8 mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 grid place-items-center text-2xl">🎭</div>
+        <div>
+          <h2 class="text-xl font-black text-slate-900">لوحة Comportement</h2>
+          <p class="text-[12px] text-slate-500 font-semibold">كل المجموعات وكل Élèves — اضغط على الطالب لتسجيل سلوكه</p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <input id="behaviorSearch" class="input !w-auto flex-1 min-w-[200px]" placeholder="ابحث عن طالب...">
+        <button id="behaviorTodayBtn" class="btn btn-purple !py-2.5 !px-4 text-[12px]">📅 سلوكيات النهاردة</button>
+      </div>
+    </div>
+
+    <div id="behaviorGroups" class="space-y-4"></div>
+  </section>
+
+  <!-- ============ Tous les cours ============ -->
+  <section id="viewRecords" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="card p-5 mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex-1">
+          <h2 class="font-black text-slate-900 text-lg">📊 Tous les cours</h2>
+          <p class="text-[12px] text-slate-500 font-semibold mt-0.5">Tous les cours المسجّلة — الأحدث أولاً</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input id="recordsSearch" class="input !py-2.5 !w-auto font-bold" placeholder="ابحث باسم الطالب...">
+          <select id="recordsMonthFilter" class="input !py-2.5 !w-auto font-bold">
+            <option value="">كل الشهور</option>
+          </select>
+        </div>
+      </div>
+      <p id="recordsSummary" class="mt-3 text-[12px] font-bold text-slate-500"></p>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[800px]">
+          <thead>
+            <tr>
+              <th class="th">التاريخ</th>
+              <th class="th">⏰ الوقت</th>
+              <th class="th">الطالب</th>
+              <th class="th">الحضور</th>
+              <th class="th">الواجب</th>
+              <th class="th">الشيت</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ كل Examensات ============ -->
+  <section id="viewExamsList" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="card p-5 mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex-1">
+          <h2 class="font-black text-slate-900 text-lg">🏆 كل Examensات</h2>
+          <p class="text-[12px] text-slate-500 font-semibold mt-0.5">كل درجات Examensات المسجّلة</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input id="examsSearch" class="input !py-2.5 !w-auto font-bold" placeholder="ابحث باسم الطالب...">
+          <select id="examsMonthFilter" class="input !py-2.5 !w-auto font-bold">
+            <option value="">كل الشهور</option>
+          </select>
+        </div>
+      </div>
+      <p id="examsSummary" class="mt-3 text-[12px] font-bold text-slate-500"></p>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[800px]">
+          <thead>
+            <tr>
+              <th class="th">التاريخ</th>
+              <th class="th">⏰ الوقت</th>
+              <th class="th">الطالب</th>
+              <th class="th">المجموعة</th>
+              <th class="th">الدرجة</th>
+              <th class="th">النسبة</th>
+            </tr>
+          </thead>
+          <tbody id="examsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Supprimer les données ============ -->
+  <section id="viewDelete" class="hidden anim-fade">
+    <button class="btn btn-white mb-5" data-back>← ← Retour</button>
+
+    <div class="card p-6 sm:p-8">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-red-50 text-ita-red grid place-items-center text-2xl">🗑️</div>
+        <div>
+          <h2 class="text-xl font-black text-slate-900">Supprimer les données</h2>
+          <p class="text-[12px] text-slate-500 font-semibold">اختر ما تريد حذفه من الداتابيز — العملية لا يمكن ال← Retour فيها</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center">
+          <p class="text-[11px] font-black text-slate-500 uppercase">Élèves</p>
+          <p id="delStatStudents" class="text-3xl font-black text-slate-900 mt-1">0</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center">
+          <p class="text-[11px] font-black text-slate-500 uppercase">Cours</p>
+          <p id="delStatSessions" class="text-3xl font-black text-slate-900 mt-1">0</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center">
+          <p class="text-[11px] font-black text-slate-500 uppercase">Comportementيات</p>
+          <p id="delStatBehavior" class="text-3xl font-black text-slate-900 mt-1">0</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center">
+          <p class="text-[11px] font-black text-slate-500 uppercase">Examensات</p>
+          <p id="delStatExams" class="text-3xl font-black text-teal-700 mt-1">0</p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="rounded-2xl border-2 border-red-100 bg-red-50/40 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <p class="font-black text-slate-900">🗑️ حذف جميع Élèves</p>
+            <p class="text-[12px] text-slate-500 font-semibold mt-0.5">يمسح كل Élèves (بدون Cours).</p>
+          </div>
+          <button data-del="students" class="btn btn-red !py-2.5 text-sm">حذف Élèves</button>
+        </div>
+
+        <div class="rounded-2xl border-2 border-red-100 bg-red-50/40 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <p class="font-black text-slate-900">🗑️ حذف جميع Cours</p>
+            <p class="text-[12px] text-slate-500 font-semibold mt-0.5">يمسح كل سجلات الحضور والواجب والشيت.</p>
+          </div>
+          <button data-del="sessions" class="btn btn-red !py-2.5 text-sm">حذف Cours</button>
+        </div>
+
+        <div class="rounded-2xl border-2 border-purple-100 bg-purple-50/40 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <p class="font-black text-slate-900">🗑️ حذف جميع Comportementيات</p>
+            <p class="text-[12px] text-slate-500 font-semibold mt-0.5">يمسح كل سجلات Comportement.</p>
+          </div>
+          <button data-del="behavior" class="btn btn-red !py-2.5 text-sm">حذف Comportementيات</button>
+        </div>
+
+        <div class="rounded-2xl border-2 border-teal-100 bg-teal-50/40 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <p class="font-black text-slate-900">🗑️ حذف جميع Examensات</p>
+            <p class="text-[12px] text-slate-500 font-semibold mt-0.5">يمسح كل درجات Examensات.</p>
+          </div>
+          <button data-del="exams" class="btn btn-red !py-2.5 text-sm">حذف Examensات</button>
+        </div>
+
+        <div class="rounded-2xl border-2 border-amber-100 bg-amber-50/40 p-4">
+          <p class="font-black text-slate-900 mb-3">📅 حذف حصص شهر معين</p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input id="delMonth" type="month" class="input flex-1">
+            <button data-del="month" class="btn btn-red !py-2.5 text-sm">حذف Cours du mois</button>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border-2 border-red-200 bg-red-100/50 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <p class="font-black text-ita-red">⚠️ Tout supprimer</p>
+            <p class="text-[12px] text-slate-600 font-semibold mt-0.5">يمسح Élèves + Cours + Comportementيات + Examensات.</p>
+          </div>
+          <button data-del="all" class="btn btn-red !py-2.5 text-sm">Tout supprimer</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-lg" style="padding-bottom:env(safe-area-inset-bottom)">
+  <div class="h-1 flag-strip"></div>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-center gap-3 relative">
+    <p class="text-[11px] sm:text-xs text-slate-600 font-bold text-center leading-tight">
+      © <span id="year"></span> Cours de français —
+      <span class="font-black text-slate-900">حازم عمرو محمد عبد الرحيم</span>
+    </p>
+    <button id="installBtn" class="btn btn-green !py-2 !px-3.5 text-[12px] absolute left-3 sm:left-6 top-1/2 -translate-y-1/2">
+      📲 Installer
+    </button>
+  </div>
+</footer>
+
+<div id="toastHost" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none w-[calc(100%-2rem)] max-w-sm"></div>
+<div id="modalHost" class="hidden fixed inset-0 z-[90] bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, doc, addDoc,
+  onSnapshot, writeBatch, serverTimestamp, getDocs, query, where,
+  setDoc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+/* ==========================================================
+   1) إعدادات Firebase
+   ========================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAiqpcBzKz0-ELHndPxTc4EQLxE2ObPREw",
+  authDomain: "french-a4085.firebaseapp.com",
+  projectId: "french-a4085",
+  storageBucket: "french-a4085.firebasestorage.app",
+  messagingSenderId: "845559714922",
+  appId: "1:845559714922:web:0a69446f6eb1f1c6886613"
+};
+
+let db = null;
+let storage = null;
+let firebaseApp = null;
+try {
+  firebaseApp = initializeApp(FIREBASE_CONFIG);
+  db = getFirestore(firebaseApp);
+  storage = getStorage(firebaseApp);
+  console.log("✅ تم الاتصال بقاعدة بيانات فايربيز (french-a4085)");
+} catch (e) { console.error('[Firebase init]', e); }
+
+/* ==========================================================
+   2) الثوابت
+   ========================================================== */
+const BEHAVIOR_ISSUES = [
+  { key: 'talking',    label: 'بيكلم زمايله في الحصة',  icon: '💬' },
+  { key: 'phone',      label: 'بيلعب بالموبايل',          icon: '📱' },
+  { key: 'talkback',   label: 'بيرد على المدرس',          icon: '🗣️' },
+  { key: 'sleeping',   label: 'بينام في الحصة',           icon: '😴' },
+  { key: 'noise',      label: 'بيعمل شغب',                icon: '🔊' },
+  { key: 'bullying',   label: 'بيأذي زمايله',             icon: '👊' },
+  { key: 'unfocused',  label: 'مش بيركز خالص',            icon: '💭' },
+  { key: 'joking',     label: 'بيهرج ويضحك',              icon: '😄' },
+  { key: 'eating',     label: 'بياكل في الحصة',           icon: '🍽️' },
+  { key: 'walking',    label: 'بيخرج من غير إذن',          icon: '🚪' }
+];
+
+/* ==========================================================
+   3) أدوات
+   ========================================================== */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+const state = {
+  students: [],
+  sessions: [],
+  behavior: [],
+  exams: [],
+  pickedStudent: null,
+  attendance: null,
+  homework: null,
+  examPickedStudent: null,
+  previewRows: [],
+  currentView: 'viewHome'
+};
+
+function toast(msg, type='success') {
+  const colors = { success:'bg-ita-green', error:'bg-ita-red', info:'bg-slate-800', warn:'bg-amber-500' };
+  const icons  = { success:'✅', error:'⛔', info:'ℹ️', warn:'⚠️' };
+  const el = document.createElement('div');
+  el.className = `${colors[type]} text-white rounded-2xl px-4 py-3 shadow-2xl text-sm font-bold flex items-center gap-2 anim-slide pointer-events-auto max-w-full`;
+  el.innerHTML = `<span>${icons[type]}</span><span class="flex-1">${escapeHtml(msg)}</span>`;
+  $('#toastHost').appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s, transform .3s';
+    el.style.opacity = '0'; el.style.transform = 'translateY(-10px)';
+    setTimeout(() => el.remove(), 320);
+  }, 3000);
+}
+
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+const formatMoney = n => (Number(n)||0).toLocaleString('en-US') + ' ج.م';
+const todayISO = () => { const d = new Date(); const o = d.getTimezoneOffset(); return new Date(d.getTime()-o*60000).toISOString().slice(0,10); };
+const nowTime = () => {
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+};
+const currentMonth = () => todayISO().slice(0,7);
+const formatDate = d => {
+  if (!d) return '—';
+  try { return new Date(d+'T00:00:00').toLocaleDateString('ar-EG-u-nu-latn',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+  catch { return d; }
+};
+const initials = n => {
+  const p = String(n||'').trim().split(/\s+/).filter(Boolean);
+  return p.length ? (p[0][0]||'') + (p[1]?p[1][0]:'') : '؟';
+};
+const normalizeCode = c => String(c ?? '').trim().toUpperCase();
+const fmtNum = n => {
+  const v = Number(n);
+  if (isNaN(v)) return '0';
+  return (v % 1 === 0) ? String(v) : v.toFixed(1);
+};
+
+/* ==========================================================
+   4) نافذة تأكيد
+   ========================================================== */
+function confirmDialog(title, text, confirmText = 'تأكيد') {
+  return new Promise(resolve => {
+    const host = $('#modalHost');
+    host.classList.remove('hidden');
+    host.innerHTML = `
+      <div class="min-h-full flex items-center justify-center py-6">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl anim-pop text-center">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-red-50 text-ita-red grid place-items-center text-2xl mb-4">⚠️</div>
+          <h3 class="font-black text-lg text-slate-900">${escapeHtml(title)}</h3>
+          <p class="text-sm text-slate-500 mt-2 leading-relaxed font-semibold">${escapeHtml(text)}</p>
+          <div class="flex gap-2 mt-6">
+            <button id="cfmCancel" class="btn btn-white flex-1">إلغاء</button>
+            <button id="cfmOk" class="btn btn-red flex-1">${escapeHtml(confirmText)}</button>
+          </div>
+        </div>
+      </div>`;
+    const close = v => { host.classList.add('hidden'); host.innerHTML=''; resolve(v); };
+    $('#cfmCancel').onclick = () => close(false);
+    $('#cfmOk').onclick = () => close(true);
+    host.onclick = e => { if (e.target === host) close(false); };
+  });
+}
+
+/* ==========================================================
+   5) التنقل
+   ========================================================== */
+const VIEWS = ['viewHome','viewExcel','viewSession','viewExam','viewStudents','viewBehavior','viewRecords','viewExamsList','viewDelete'];
+
+function showView(id, pushHistory = true) {
+  const prev = state.currentView;
+  state.currentView = id;
+
+  VIEWS.forEach(v => {
+    const el = document.getElementById(v);
+    if (el) el.classList.toggle('hidden', v !== id);
+  });
+  window.scrollTo({ top:0, behavior:'smooth' });
+
+  if (pushHistory && id !== 'viewHome' && prev === 'viewHome') {
+    history.pushState({ view: id }, '');
+  }
+}
+
+window.addEventListener('popstate', () => {
+  if (state.currentView !== 'viewHome') showView('viewHome', false);
+});
+
+$('#btnExcel').addEventListener('click',      () => { resetImport(); showView('viewExcel'); });
+$('#btnSession').addEventListener('click',    () => { resetSessionForm(); showView('viewSession'); });
+$('#btnExam').addEventListener('click',       () => { resetExamForm(); showView('viewExam'); });
+$('#btnStudents').addEventListener('click',   () => { renderGroups(); showView('viewStudents'); });
+$('#btnBehavior').addEventListener('click',   () => { renderBehaviorGroups(); showView('viewBehavior'); });
+$('#btnRecords').addEventListener('click',    () => { renderRecords(); showView('viewRecords'); });
+$('#btnExamsList').addEventListener('click',  () => { renderExamsList(); showView('viewExamsList'); });
+$('#btnDelete').addEventListener('click',     () => { updateDeleteStats(); showView('viewDelete'); });
+
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-back]')) {
+    resetImport();
+    if (state.currentView !== 'viewHome') history.back();
+    else showView('viewHome', false);
+  }
+});
+
+/* ==========================================================
+   6) الحسابات والشريط
+   ========================================================== */
+function setConn(ok) {
+  const dot = $('#dotConn'), txt = $('#txtConn');
+  if (ok) {
+    dot.className = 'w-2.5 h-2.5 rounded-full bg-ita-green pulse-dot';
+    txt.textContent = 'متصل بقاعدة البيانات';
+    txt.className = 'text-ita-green font-black';
+  } else {
+    dot.className = 'w-2.5 h-2.5 rounded-full bg-ita-red pulse-dot';
+    txt.textContent = 'Connexion à la base de données...';
+    txt.className = 'text-ita-red font-black';
+  }
+}
+
+function updateCounts() {
+  $('#txtCount').textContent = state.students.length;
+  $('#miniStudents').textContent = state.students.length;
+  $('#miniSessions').textContent = state.sessions.length;
+  $('#miniExams').textContent = state.exams.length;
+
+  const cm = currentMonth();
+  const monthSessions = state.sessions.filter(s => String(s.date||'').startsWith(cm));
+  const monthMoney = monthSessions.reduce((a,s)=>a+(Number(s.sheet||s.amount)||0),0);
+
+  $('#miniMonthSessions').textContent = monthSessions.length;
+  $('#miniMonthMoney').textContent = monthMoney.toLocaleString('en-US');
+}
+
+function updateDeleteStats() {
+  $('#delStatStudents').textContent = state.students.length;
+  $('#delStatSessions').textContent = state.sessions.length;
+  $('#delStatBehavior').textContent = state.behavior.length;
+  $('#delStatExams').textContent = state.exams.length;
+}
+
+/* ==========================================================
+   7) Firebase Listeners
+   ========================================================== */
+function startListeners() {
+  if (!db) { setConn(false); toast('لم يتم ضبط Firebase','error'); return; }
+  setConn(false);
+
+  onSnapshot(collection(db,'students'),
+    snap => {
+      state.students = snap.docs.map(d => ({ id:d.id, ...d.data() }))
+        .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ar'));
+      setConn(true);
+      updateCounts();
+      if (state.currentView === 'viewStudents') renderGroups();
+      if (state.currentView === 'viewBehavior') renderBehaviorGroups();
+    },
+    err => { console.error(err); setConn(false); toast('تعذّر الاتصال بالداتابيز: '+err.message,'error'); }
+  );
+
+  onSnapshot(collection(db,'sessions'),
+    snap => {
+      state.sessions = snap.docs.map(d => ({ id:d.id, ...d.data() }))
+        .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+      updateCounts();
+      if (state.currentView === 'viewRecords') renderRecords();
+    },
+    err => console.error(err)
+  );
+
+  onSnapshot(collection(db,'behavior'),
+    snap => {
+      state.behavior = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      updateCounts();
+    },
+    err => console.error(err)
+  );
+
+  onSnapshot(collection(db,'exams'),
+    snap => {
+      state.exams = snap.docs.map(d => ({ id:d.id, ...d.data() }))
+        .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+      updateCounts();
+      if (state.currentView === 'viewExamsList') renderExamsList();
+    },
+    err => console.error(err)
+  );
+}
+
+/* ==========================================================
+   8) رفع Excel
+   ========================================================== */
+const excelInput = $('#excelInput');
+const dropArea = $('#dropArea');
+
+['dragover','dragenter'].forEach(ev => dropArea.addEventListener(ev, e => {
+  e.preventDefault(); dropArea.classList.add('border-ita-green','bg-ita-greenLight/30');
+}));
+['dragleave','drop'].forEach(ev => dropArea.addEventListener(ev, e => {
+  e.preventDefault(); dropArea.classList.remove('border-ita-green','bg-ita-greenLight/30');
+}));
+dropArea.addEventListener('drop', e => { const f = e.dataTransfer.files?.[0]; if (f) handleExcelFile(f); });
+excelInput.addEventListener('change', e => { const f = e.target.files?.[0]; if (f) handleExcelFile(f); });
+
+$('#showPromptBtn').addEventListener('click', () => {
+  const prompt = `أنا مدرس كورس إيطالي وأريد ملف Excel فيه 4 أعمدة بالترتيب:
+1) اسم الطالب
+2) اليوم والساعة (مثال: السبت 5:00 مساءً)
+3) المرحلة (إعدادي أو ثانوي)
+4) الكود السري للطالب — بصيغة ITA + 4 أرقام عشوائية (مثال: ITA4287، ITA9513، ITA3056)
+
+⚠️ مهم جدًا: كل كود لازم يكون مختلف عن التاني، وميبدأش بصفر بعد ITA.
+✅ أمثلة صح: ITA4287 · ITA9513 · ITA3056 · ITA7821 (يقبل ITA أو ita أو Ita — كلها هتتوحّد لـ ITA)
+❌ أمثلة غلط: ITA001 · ITA0001 · ITA123 (لازم 4 أرقام بالظبط)
+
+من فضلك أرسل لي قالب Excel جاهز بالعربي بهذه الأعمدة.
+أرسل لي الصفوف كالتالي:
+اسم الطالب, اليوم والساعة, المرحلة, الكود`;
+
+  const host = $('#modalHost');
+  host.classList.remove('hidden');
+  host.innerHTML = `
+    <div class="min-h-full flex items-center justify-center py-6">
+      <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl anim-pop">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-lg text-slate-900">📋 نص جاهز — انسخه وأرسله لـ ChatGPT/Claude</h3>
+          <button id="pClose" class="w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition grid place-items-center">✕</button>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+          <pre id="promptText" class="text-[13px] text-slate-800 font-semibold whitespace-pre-wrap leading-relaxed copy-text select-all">${escapeHtml(prompt)}</pre>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button id="pCopy" class="btn btn-green flex-1">📋 نسخ النص</button>
+          <button id="pClose2" class="btn btn-white flex-1">إغلاق</button>
+        </div>
+      </div>
+    </div>`;
+
+  const close = () => { host.classList.add('hidden'); host.innerHTML=''; };
+  $('#pClose').onclick = close;
+  $('#pClose2').onclick = close;
+  host.onclick = e => { if (e.target === host) close(); };
+  $('#pCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText(prompt); toast('تم نسخ النص ✅'); }
+    catch {
+      const t = $('#promptText');
+      const r = document.createRange(); r.selectNode(t);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(r);
+      document.execCommand('copy');
+      toast('تم نسخ النص ✅');
+    }
+  };
+});
+
+function handleExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), { type:'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', blankrows:false });
+      if (!rows.length) return toast('الملف فارغ','error');
+
+      let hIdx = 0;
+      for (let i=0;i<Math.min(rows.length,10);i++){
+        const line = rows[i].map(c=>String(c).toLowerCase()).join(' ');
+        if (/اسم|name|كود|code|اليوم|time|مرحلة|stage/.test(line)) { hIdx = i; break; }
+      }
+
+      const headers = rows[hIdx].map((h,i)=>String(h).trim()||`عمود ${i+1}`);
+      const dataRows = rows.slice(hIdx+1).filter(r=>r.some(c=>String(c).trim()!==''));
+
+      const find = re => headers.findIndex(h => re.test(String(h).toLowerCase()));
+      let cName  = find(/اسم|الاسم|name|student|طالب/);
+      let cTime  = find(/يوم|ساعة|وقت|موعد|time|day|schedule/);
+      let cStage = find(/مرحلة|مرحله|stage|level|صف|سنة/);
+      let cCode  = find(/كود|الكود|code|سري|pin|secret/);
+
+      if (cName  < 0) cName  = 0;
+      if (cTime  < 0) cTime  = cName === 1 ? 0 : 1;
+      if (cStage < 0) cStage = (cName===2||cTime===2) ? 3 : 2;
+      if (cCode  < 0) cCode  = 3;
+
+      const cleanRows = dataRows.map(r => ({
+        name:  String(r[cName]  ?? '').trim(),
+        time:  String(r[cTime]  ?? '').trim(),
+        stage: String(r[cStage] ?? '').trim(),
+        code:  normalizeCode(r[cCode] ?? '')
+      })).filter(r => r.name);
+
+      if (!cleanRows.length) return toast('لم يتم العثور على أسماء صالحة','error');
+
+      state.previewRows = cleanRows;
+      renderPreview();
+      toast(`تم قراءة ${cleanRows.length} طالب من الملف`,'info');
+    } catch (err) {
+      console.error(err);
+      toast('تعذّر قراءة الملف: '+err.message,'error');
+    }
+    excelInput.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderPreview() {
+  const rows = state.previewRows;
+  $('#previewBox').classList.remove('hidden');
+  $('#previewCount').textContent = rows.length + ' صف';
+  $('#previewBody').innerHTML = rows.slice(0,50).map((r,i)=>`
+    <tr class="hover:bg-slate-50">
+      <td class="td !py-2 text-slate-400 font-bold">${i+1}</td>
+      <td class="td !py-2 font-bold text-slate-900">${escapeHtml(r.name)}</td>
+      <td class="td !py-2">${escapeHtml(r.time||'—')}</td>
+      <td class="td !py-2">${escapeHtml(r.stage||'—')}</td>
+      <td class="td !py-2"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded-lg">${escapeHtml(r.code||'—')}</span></td>
+    </tr>
+  `).join('') + (rows.length>50 ? `<tr><td colspan="5" class="td !py-2 text-center text-slate-400">... و ${rows.length-50} صف آخر</td></tr>` : '');
+}
+
+$('#cancelImport').addEventListener('click', resetImport);
+function resetImport() {
+  state.previewRows = [];
+  $('#previewBox').classList.add('hidden');
+  $('#importResult').classList.add('hidden');
+  excelInput.value = '';
+}
+
+$('#confirmImport').addEventListener('click', async () => {
+  if (!db) return toast('لم يتم ضبط Firebase','error');
+  const rows = state.previewRows;
+  if (!rows.length) return toast('لا توجد بيانات للرفع','warn');
+
+  const btn = $('#confirmImport');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ جارٍ الإضافة...';
+
+  try {
+    const existingByCode = new Map();
+    state.students.forEach(s => { if (s.code) existingByCode.set(normalizeCode(s.code), s); });
+
+    let added = 0, updated = 0;
+    const usedCodes = new Set(existingByCode.keys());
+
+    const genCode = () => {
+      let c;
+      let tries = 0;
+      do {
+        const num = Math.floor(1000 + Math.random() * 9000);
+        c = 'ITA' + num;
+        tries++;
+        if (tries > 5000) { c = 'ITA' + Date.now().toString().slice(-4); break; }
+      } while (usedCodes.has(c));
+      usedCodes.add(c);
+      return c;
+    };
+
+    const CHUNK = 400;
+    for (let i=0;i<rows.length;i+=CHUNK) {
+      const batch = writeBatch(db);
+      rows.slice(i,i+CHUNK).forEach(r => {
+        const normCode = normalizeCode(r.code);
+        const exist = normCode ? existingByCode.get(normCode) : null;
+        if (exist) {
+          batch.update(doc(db,'students',exist.id), {
+            name: r.name, time: r.time, stage: r.stage,
+            code: normCode || exist.code, updatedAt: serverTimestamp()
+          });
+          updated++;
+        } else {
+          const code = normCode || genCode();
+          usedCodes.add(code);
+          batch.set(doc(collection(db,'students')), {
+            name: r.name, time: r.time, stage: r.stage,
+            code, createdAt: serverTimestamp()
+          });
+          added++;
+        }
+      });
+      await batch.commit();
+    }
+
+    $('#importResult').classList.remove('hidden');
+    $('#importResult').innerHTML = `
+      <div class="rounded-2xl border-2 border-ita-green/30 bg-ita-greenLight/50 p-5">
+        <p class="font-black text-ita-green text-lg">🎉 تم الرفع بنجاح</p>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div class="bg-white rounded-xl p-3 border border-ita-green/20">
+            <p class="text-[11px] font-black text-slate-500">طلاب جدد</p>
+            <p class="text-2xl font-black text-ita-green">${added}</p>
+          </div>
+          <div class="bg-white rounded-xl p-3 border border-ita-green/20">
+            <p class="text-[11px] font-black text-slate-500">تم تحديثهم</p>
+            <p class="text-2xl font-black text-slate-800">${updated}</p>
+          </div>
+        </div>
+      </div>`;
+    resetImport();
+    toast(`تم رفع ${added} طالب وتحديث ${updated}`,'success');
+  } catch (err) {
+    console.error(err);
+    toast('فشل الرفع: '+err.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+});
+
+/* ==========================================================
+   9) Enregistrer un cours
+   ========================================================== */
+const pickSearch = $('#pickSearch');
+const pickDropdown = $('#pickDropdown');
+
+pickSearch.addEventListener('input', () => {
+  const t = pickSearch.value.trim().toLowerCase();
+  if (!t) { pickDropdown.classList.add('hidden'); return; }
+  const matches = state.students.filter(s =>
+    String(s.name||'').toLowerCase().includes(t) ||
+    String(s.code||'').toLowerCase().includes(t)
+  ).slice(0,8);
+
+  if (!matches.length) {
+    pickDropdown.innerHTML = `<div class="px-4 py-3 text-sm text-slate-400 text-center">لا يوجد طالب مطابق</div>`;
+  } else {
+    pickDropdown.innerHTML = matches.map(s => `
+      <button type="button" data-pick="${s.id}" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-ita-greenLight/60 transition text-right border-b border-slate-50 last:border-0">
+        <span class="w-9 h-9 rounded-xl bg-ita-greenLight text-ita-green grid place-items-center font-black text-xs shrink-0">${escapeHtml(initials(s.name))}</span>
+        <span class="min-w-0 flex-1">
+          <span class="block font-black text-sm text-slate-900 truncate">${escapeHtml(s.name)}</span>
+          <span class="block text-[11px] text-slate-500 font-mono">${escapeHtml(s.code||'بدون كود')}</span>
+        </span>
+      </button>`).join('');
+  }
+  pickDropdown.classList.remove('hidden');
+});
+
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-pick]');
+  if (p) {
+    const st = state.students.find(s => s.id === p.dataset.pick);
+    if (st) { state.pickedStudent = st; pickSearch.value=''; renderPicked(); pickDropdown.classList.add('hidden'); }
+    return;
+  }
+  if (!e.target.closest('#pickDropdown') && e.target !== pickSearch) pickDropdown.classList.add('hidden');
+});
+
+function renderPicked() {
+  const s = state.pickedStudent;
+  const card = $('#pickedCard');
+  if (!s) { card.classList.add('hidden'); updateSummary(); return; }
+  card.classList.remove('hidden');
+  $('#pkAvatar').textContent = initials(s.name);
+  $('#pkName').textContent = s.name;
+  $('#pkCode').textContent = s.code || '—';
+  $('#pkMeta').textContent = [s.time, s.stage].filter(Boolean).join(' · ') || '';
+  updateSummary();
+}
+
+$('#clearPick').addEventListener('click', () => { state.pickedStudent = null; renderPicked(); });
+
+$$('.att-btn').forEach(b => b.addEventListener('click', () => {
+  state.attendance = b.dataset.att;
+  paintAtt();
+  updateSummary();
+}));
+function paintAtt() {
+  $$('.att-btn').forEach(b => {
+    const active = b.dataset.att === state.attendance;
+    const isP = b.dataset.att === 'present';
+    const on = isP ? 'border-ita-green bg-ita-greenLight/60' : 'border-ita-red bg-ita-redLight/60';
+    b.className = `att-btn rounded-2xl border-2 p-4 text-center transition ${active ? on : 'border-slate-200 bg-white hover:border-slate-300'}`;
+  });
+}
+
+$$('.hw-btn').forEach(b => b.addEventListener('click', () => {
+  state.homework = b.dataset.hw;
+  paintHw();
+  $('#hwReasonBox').classList.toggle('hidden', state.homework !== 'not_done');
+  updateSummary();
+}));
+function paintHw() {
+  $$('.hw-btn').forEach(b => {
+    const active = b.dataset.hw === state.homework;
+    const isDone = b.dataset.hw === 'done';
+    const on = isDone ? 'border-ita-green bg-ita-greenLight/60' : 'border-rose-500 bg-rose-50';
+    b.className = `hw-btn rounded-2xl border-2 p-4 text-center transition ${active ? on : 'border-slate-200 bg-white hover:border-slate-300'}`;
+  });
+}
+
+$$('.sheet-chip').forEach(c => c.addEventListener('click', () => {
+  $('#sheetInput').value = c.dataset.sheet;
+  updateSummary();
+}));
+$('#sheetInput').addEventListener('input', updateSummary);
+$('#dateInput').addEventListener('change', updateSummary);
+$('#dateInput').value = todayISO();
+
+function updateSummary() {
+  const s = state.pickedStudent;
+  $('#sumStudent').textContent = s ? s.name : '—';
+  const att = state.attendance === 'present' ? '✅ Présent'
+           : state.attendance === 'absent'  ? '❌ Absent' : '—';
+  $('#sumAtt').textContent = att;
+
+  const hw = state.homework === 'done'     ? '📗 Devoir fait'
+           : state.homework === 'not_done' ? '📕 ما عملش' : '—';
+  $('#sumHw').textContent = hw;
+
+  const v = Number($('#sheetInput').value) || 0;
+  $('#sumSheet').textContent = v > 0 ? formatMoney(v) : 'لم يدفع';
+  $('#sumDate').textContent = formatDate($('#dateInput').value);
+  $('#sumTime').textContent = nowTime();
+}
+
+function resetSessionForm() {
+  state.pickedStudent = null;
+  state.attendance = null;
+  state.homework = null;
+  pickSearch.value = '';
+  $('#sheetInput').value = '0';
+  $('#dateInput').value = todayISO();
+  $('#hwReasonInput').value = '';
+  $('#hwReasonBox').classList.add('hidden');
+  $('#pickedCard').classList.add('hidden');
+  paintAtt();
+  paintHw();
+  updateSummary();
+}
+
+$('#resetBtn').addEventListener('click', resetSessionForm);
+
+$('#saveBtn').addEventListener('click', async () => {
+  if (!db) return toast('لم يتم ضبط Firebase','error');
+  if (!state.pickedStudent) return toast('اختر الطالب أولاً','error');
+  if (!state.attendance) return toast('حدّد Présence','error');
+  if (!state.homework) return toast('حدّد État du devoir','error');
+
+  let hwReason = '';
+  if (state.homework === 'not_done') {
+    hwReason = $('#hwReasonInput').value.trim();
+    if (!hwReason) return toast('اختر سبب عدم Devoir fait','error');
+  }
+
+  const btn = $('#saveBtn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ جارٍ الحفظ...';
+
+  const sheetVal = Number($('#sheetInput').value) || 0;
+  const timeStr = nowTime();
+
+  const payload = {
+    studentId:    state.pickedStudent.id,
+    studentName:  state.pickedStudent.name || '',
+    studentCode:  normalizeCode(state.pickedStudent.code || ''),
+    studentTime:  state.pickedStudent.time || '',
+    studentStage: state.pickedStudent.stage || '',
+    date:         $('#dateInput').value || todayISO(),
+    time:         timeStr,
+    sheet:        sheetVal,
+    amount:       sheetVal,
+    attendance:   state.attendance,
+    homework:     state.homework,
+    homeworkReason: hwReason,
+    createdAt:    serverTimestamp()
+  };
+
+  try {
+    await addDoc(collection(db,'sessions'), payload);
+    toast(`تم Enregistrer le cours — ${timeStr} 🎉`,'success');
+    resetSessionForm();
+    setTimeout(() => showView('viewHome'), 500);
+  } catch (err) {
+    console.error(err);
+    toast('فشل الحفظ: '+err.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+});
+
+/* ==========================================================
+   10) Examens (البسيط)
+   ========================================================== */
+const examSearch = $('#examSearch');
+const examDropdown = $('#examDropdown');
+
+examSearch.addEventListener('input', () => {
+  const t = examSearch.value.trim().toLowerCase();
+  if (!t) { examDropdown.classList.add('hidden'); return; }
+  const matches = state.students.filter(s =>
+    String(s.name||'').toLowerCase().includes(t) ||
+    String(s.code||'').toLowerCase().includes(t)
+  ).slice(0,8);
+
+  if (!matches.length) {
+    examDropdown.innerHTML = `<div class="px-4 py-3 text-sm text-slate-400 text-center">لا يوجد طالب مطابق</div>`;
+  } else {
+    examDropdown.innerHTML = matches.map(s => `
+      <button type="button" data-exam-pick="${s.id}" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 transition text-right border-b border-slate-50 last:border-0">
+        <span class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 grid place-items-center font-black text-sm shrink-0">${escapeHtml(initials(s.name))}</span>
+        <span class="min-w-0 flex-1">
+          <span class="block font-black text-base text-slate-900 truncate">${escapeHtml(s.name)}</span>
+          <span class="block text-[12px] text-slate-500 font-mono">${escapeHtml(s.code||'بدون كود')}</span>
+        </span>
+      </button>`).join('');
+  }
+  examDropdown.classList.remove('hidden');
+});
+
+document.addEventListener('click', e => {
+  const p = e.target.closest('[data-exam-pick]');
+  if (p) {
+    const st = state.students.find(s => s.id === p.dataset.examPick);
+    if (st) {
+      state.examPickedStudent = st;
+      examSearch.value = '';
+      renderExamPicked();
+      examDropdown.classList.add('hidden');
+    }
+    return;
+  }
+  if (!e.target.closest('#examDropdown') && e.target !== examSearch) examDropdown.classList.add('hidden');
+});
+
+function renderExamPicked() {
+  const s = state.examPickedStudent;
+  const card = $('#examPickedCard');
+  if (!s) {
+    card.classList.add('hidden');
+    return;
+  }
+  card.classList.remove('hidden');
+  $('#exAvatar').textContent = initials(s.name);
+  $('#exName').textContent = s.name;
+  $('#exCode').textContent = s.code || '—';
+  $('#exGroup').textContent = [s.time, s.stage].filter(Boolean).join(' · ') || 'بدون مجموعة';
+  updateExamSummary();
+}
+
+$('#examClearPick').addEventListener('click', () => {
+  state.examPickedStudent = null;
+  renderExamPicked();
+});
+
+$$('.exam-chip').forEach(c => c.addEventListener('click', () => {
+  $('#examTotal').value = c.dataset.total;
+  updateExamSummary();
+}));
+
+['examScore','examTotal'].forEach(id => {
+  const el = $('#'+id);
+  if (el) el.addEventListener('input', updateExamSummary);
+});
+
+function updateExamSummary() {
+  const score = Number($('#examScore').value);
+  const total = Number($('#examTotal').value);
+  const hasTotal = !isNaN(total) && total > 0;
+  const hasScore = !isNaN(score) && score >= 0;
+
+  const pct = hasTotal && hasScore ? Math.round((score/total)*1000)/10 : 0;
+  const preview = $('#exLiveScore');
+  const previewPct = $('#exLivePct');
+
+  if (hasTotal && hasScore) {
+    preview.textContent = `${fmtNum(score)} من ${fmtNum(total)}`;
+    let msg = '';
+    if (pct >= 90) msg = '🌟 ممتاز جدًا!';
+    else if (pct >= 75) msg = '👏 جيد جدًا';
+    else if (pct >= 60) msg = '👍 كويس';
+    else if (pct >= 50) msg = '⚠️ مقبول';
+    else msg = '❗ يحتاج تحسين';
+    previewPct.textContent = `${pct}%  ·  ${msg}`;
+  } else {
+    preview.textContent = '—';
+    previewPct.textContent = '—';
+  }
+}
+
+function resetExamForm() {
+  state.examPickedStudent = null;
+  examSearch.value = '';
+  $('#examScore').value = '';
+  $('#examTotal').value = '';
+  $('#examPickedCard').classList.add('hidden');
+  $('#examDropdown').classList.add('hidden');
+  updateExamSummary();
+}
+
+$('#resetExamBtn').addEventListener('click', resetExamForm);
+
+$('#saveExamBtn').addEventListener('click', async () => {
+  if (!db) return toast('لم يتم ضبط Firebase','error');
+  if (!state.examPickedStudent) return toast('اختر الطالب أولاً','error');
+
+  const score = Number($('#examScore').value);
+  const total = Number($('#examTotal').value);
+
+  if (isNaN(total) || total <= 0) return toast('اكتب الدرجة الكلية (من كام)','error');
+  if (isNaN(score) || score < 0) return toast('اكتب درجة الطالب','error');
+  if (score > total) return toast('الدرجة أكبر من الكلية — راجع الأرقام','error');
+
+  const btn = $('#saveExamBtn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ جارٍ الحفظ...';
+
+  const timeStr = nowTime();
+  const s = state.examPickedStudent;
+
+  const payload = {
+    studentId:    s.id,
+    studentName:  s.name || '',
+    studentCode:  normalizeCode(s.code || ''),
+    studentTime:  s.time || '',
+    studentStage: s.stage || '',
+    group:        s.time || '',
+    score:        score,
+    total:        total,
+    percentage:   Math.round((score/total)*1000)/10,
+    date:         todayISO(),
+    time:         timeStr,
+    createdAt:    serverTimestamp()
+  };
+
+  try {
+    await addDoc(collection(db,'exams'), payload);
+    toast(`تم حفظ Examens — ${fmtNum(score)} من ${fmtNum(total)} 🎉`,'success');
+    resetExamForm();
+    setTimeout(() => showView('viewHome'), 600);
+  } catch (err) {
+    console.error(err);
+    toast('فشل الحفظ: '+err.message,'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+});
+
+/* ==========================================================
+   11) Données des élèves
+   ========================================================== */
+function groupStudents(list) {
+  const map = new Map();
+  list.forEach(s => {
+    const key = (s.time || 'بدون موعد') + '||' + (s.stage || 'بدون مرحلة');
+    if (!map.has(key)) map.set(key, { time: s.time || 'بدون موعد', stage: s.stage || 'بدون مرحلة', students: [] });
+    map.get(key).students.push(s);
+  });
+  return [...map.values()].sort((a,b)=>String(a.time).localeCompare(String(b.time),'ar'));
+}
+
+function renderGroups() {
+  const term = ($('#studentsSearch')?.value || '').trim().toLowerCase();
+  const stageF = $('#studentsStageFilter')?.value || '';
+
+  let list = state.students;
+  if (stageF) list = list.filter(s => (s.stage||'').includes(stageF));
+  if (term) list = list.filter(s => String(s.name||'').toLowerCase().includes(term) || String(s.code||'').toLowerCase().includes(term));
+
+  const groups = groupStudents(list);
+  const container = $('#groupsContainer');
+
+  if (!groups.length) {
+    container.innerHTML = `
+      <div class="card p-10 text-center">
+        <div class="w-16 h-16 mx-auto rounded-3xl bg-slate-100 text-slate-400 grid place-items-center text-3xl mb-4">📭</div>
+        <p class="font-black text-slate-900 text-lg">مفيش طلاب</p>
+        <p class="text-sm text-slate-500 font-semibold mt-1.5">اImporter un fichier Excel الأول أو غيّر الفلتر.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = groups.map((g, gi) => {
+    const stageCls = /ثانوي/.test(g.stage) ? 'bg-ita-redLight text-ita-red'
+                    : /إعدادي/.test(g.stage) ? 'bg-ita-greenLight text-ita-green'
+                    : 'bg-slate-100 text-slate-600';
+    return `
+      <div class="card overflow-hidden anim-fade" style="animation-delay:${gi*40}ms">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 grid place-items-center text-xl">🕐</div>
+            <div>
+              <p class="font-black text-slate-900">${escapeHtml(g.time)}</p>
+              <p class="text-[11px] text-slate-500 font-bold">${g.students.length} طالب</p>
+            </div>
+          </div>
+          <span class="rounded-full px-3 py-1 text-[11px] font-black ${stageCls}">🎓 ${escapeHtml(g.stage)}</span>
+        </div>
+        <div class="p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          ${g.students.map(s => {
+            const sess = state.sessions.filter(x => x.studentId === s.id);
+            const paid = sess.reduce((a,x)=>a+(Number(x.sheet??x.amount)||0),0);
+            const present = sess.filter(x=>x.attendance==='present').length;
+            const exCount = state.exams.filter(x => x.studentId === s.id).length;
+            return `
+              <button data-show-student="${s.id}" class="text-right rounded-2xl border-2 border-slate-100 bg-white hover:border-blue-300 hover:bg-blue-50/40 p-4 transition group">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl bg-ita-green text-white grid place-items-center font-black text-sm shrink-0">${escapeHtml(initials(s.name))}</div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-black text-slate-900 text-sm truncate">${escapeHtml(s.name)}</p>
+                    <p class="text-[11px] text-slate-500 font-bold font-mono">${escapeHtml(s.code||'—')}</p>
+                  </div>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  <span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-slate-100 text-slate-600">${sess.length} حصة</span>
+                  <span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-ita-greenLight text-ita-green">✅ ${present}</span>
+                  <span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-teal-50 text-teal-700">🏆 ${exCount}</span>
+                </div>
+              </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+$('#studentsSearch')?.addEventListener('input', renderGroups);
+$('#studentsStageFilter')?.addEventListener('change', renderGroups);
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-show-student]');
+  if (!btn) return;
+  const s = state.students.find(x => x.id === btn.dataset.showStudent);
+  if (!s) return;
+  showStudentModal(s);
+});
+
+function showStudentModal(s) {
+  const sess = state.sessions.filter(x => x.studentId === s.id)
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const paid = sess.reduce((a,x)=>a+(Number(x.sheet??x.amount)||0),0);
+  const present = sess.filter(x=>x.attendance==='present').length;
+  const absent = sess.length - present;
+  const hwNotDone = sess.filter(x=>x.homework==='not_done').length;
+  const beh = state.behavior.filter(x => x.studentId === s.id);
+  const exms = state.exams.filter(x => x.studentId === s.id)
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+
+  const avgPct = exms.length
+    ? Math.round(exms.reduce((a,x)=>a+(Number(x.percentage)||0),0) / exms.length * 10) / 10
+    : 0;
+
+  const host = $('#modalHost');
+  host.classList.remove('hidden');
+  host.innerHTML = `
+    <div class="min-h-full flex items-start sm:items-center justify-center py-6">
+      <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl anim-pop overflow-hidden">
+        <div class="bg-gradient-to-l from-ita-green to-ita-greenDark p-5 text-white relative">
+          <button id="stClose" class="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 text-white grid place-items-center transition">✕</button>
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-3xl bg-white/20 backdrop-blur grid place-items-center font-black text-2xl ring-2 ring-white/30">${escapeHtml(initials(s.name))}</div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-black text-white/80 uppercase tracking-wide">بيانات الطالب</p>
+              <h3 class="text-xl font-black truncate">${escapeHtml(s.name)}</h3>
+              <p class="text-[12px] font-bold text-white/90 font-mono">${escapeHtml(s.code||'—')}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5 max-h-[70vh] overflow-y-auto">
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+              <p class="text-[10px] font-black text-slate-400 uppercase">🕐 اليوم والساعة</p>
+              <p class="font-black text-slate-900 text-sm mt-1">${escapeHtml(s.time||'—')}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+              <p class="text-[10px] font-black text-slate-400 uppercase">🎓 المرحلة</p>
+              <p class="font-black text-slate-900 text-sm mt-1">${escapeHtml(s.stage||'—')}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-center">
+              <p class="text-[10px] font-black text-slate-400 uppercase">Cours</p>
+              <p class="text-xl font-black text-slate-900 mt-0.5">${sess.length}</p>
+            </div>
+            <div class="rounded-2xl bg-ita-greenLight border border-ita-green/10 p-3 text-center">
+              <p class="text-[10px] font-black text-ita-green uppercase">Présent</p>
+              <p class="text-xl font-black text-ita-green mt-0.5">${present}</p>
+            </div>
+            <div class="rounded-2xl bg-ita-redLight border border-ita-red/10 p-3 text-center">
+              <p class="text-[10px] font-black text-ita-red uppercase">Absent</p>
+              <p class="text-xl font-black text-ita-red mt-0.5">${absent}</p>
+            </div>
+            <div class="rounded-2xl bg-amber-50 border border-amber-100 p-3 text-center">
+              <p class="text-[10px] font-black text-amber-600 uppercase">دفع</p>
+              <p class="text-xl font-black text-amber-700 mt-0.5">${paid}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="rounded-2xl bg-rose-50 border border-rose-100 p-3">
+              <p class="text-[10px] font-black text-rose-600 uppercase">📕 واجب ما اتعملش</p>
+              <p class="font-black text-rose-700 text-lg mt-0.5">${hwNotDone} مرة</p>
+            </div>
+            <div class="rounded-2xl bg-purple-50 border border-purple-100 p-3">
+              <p class="text-[10px] font-black text-purple-600 uppercase">🎭 سلوكيات</p>
+              <p class="font-black text-purple-700 text-lg mt-0.5">${beh.length}</p>
+            </div>
+            <div class="rounded-2xl bg-teal-50 border border-teal-100 p-3">
+              <p class="text-[10px] font-black text-teal-600 uppercase">🏆 امتحانات</p>
+              <p class="font-black text-teal-700 text-lg mt-0.5">${exms.length}</p>
+            </div>
+          </div>
+
+          ${exms.length ? `
+            <div class="rounded-2xl bg-gradient-to-l from-teal-50 to-white border border-teal-100 p-3 mb-4 flex items-center justify-between">
+              <div>
+                <p class="text-[10px] font-black text-teal-600 uppercase">📈 متوسط النسبة</p>
+                <p class="font-black text-teal-700 text-xl mt-0.5">${avgPct}%</p>
+              </div>
+              <span class="text-3xl">🏆</span>
+            </div>
+          ` : ''}
+
+          <h4 class="font-black text-slate-900 mb-2 text-sm">📚 آخر 10 حصص</h4>
+          <div class="rounded-2xl border border-slate-100 overflow-hidden mb-4">
+            <div class="overflow-x-auto max-h-64">
+              <table class="w-full text-xs">
+                <thead class="sticky top-0">
+                  <tr>
+                    <th class="th !py-2">التاريخ</th>
+                    <th class="th !py-2">⏰ الوقت</th>
+                    <th class="th !py-2">الحضور</th>
+                    <th class="th !py-2">الواجب</th>
+                    <th class="th !py-2">الشيت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sess.slice(0,10).map(x => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="td !py-2 font-bold">${formatDate(x.date)}</td>
+                      <td class="td !py-2 font-mono text-blue-600">${escapeHtml(x.time||'—')}</td>
+                      <td class="td !py-2">
+                        ${x.attendance === 'present'
+                          ? `<span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-ita-greenLight text-ita-green">✅ Présent</span>`
+                          : `<span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-ita-redLight text-ita-red">❌ Absent</span>`}
+                      </td>
+                      <td class="td !py-2">
+                        ${x.homework === 'done'
+                          ? `<span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-ita-greenLight text-ita-green">📗</span>`
+                          : x.homework === 'not_done'
+                            ? `<span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-rose-100 text-rose-700" title="${escapeHtml(x.homeworkReason||'')}">📕 ${escapeHtml((x.homeworkReason||'').slice(0,14))}</span>`
+                            : `<span class="text-slate-400 text-[10px]">—</span>`}
+                      </td>
+                      <td class="td !py-2 font-black ${Number(x.sheet||x.amount)>0?'text-ita-green':'text-slate-400'}">${Number(x.sheet||x.amount)>0?formatMoney(x.sheet||x.amount):'—'}</td>
+                    </tr>`).join('') || `<tr><td colspan="5" class="td text-center text-slate-400 py-6">لا توجد حصص</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          ${exms.length ? `
+            <h4 class="font-black text-slate-900 mb-2 text-sm">🏆 آخر Examensات</h4>
+            <div class="rounded-2xl border border-slate-100 overflow-hidden mb-4">
+              <div class="overflow-x-auto max-h-64">
+                <table class="w-full text-xs">
+                  <thead class="sticky top-0">
+                    <tr>
+                      <th class="th !py-2">التاريخ</th>
+                      <th class="th !py-2">الدرجة</th>
+                      <th class="th !py-2">النسبة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${exms.slice(0,10).map(x => {
+                      const pct = Number(x.percentage)||0;
+                      const color = pct >= 80 ? 'text-ita-green bg-ita-greenLight' : pct >= 50 ? 'text-amber-700 bg-amber-50' : 'text-ita-red bg-ita-redLight';
+                      return `
+                        <tr class="hover:bg-slate-50">
+                          <td class="td !py-2 font-bold">${formatDate(x.date)}</td>
+                          <td class="td !py-2 font-black text-slate-900">${fmtNum(x.score)} / ${fmtNum(x.total)}</td>
+                          <td class="td !py-2"><span class="rounded-full px-2 py-0.5 text-[10px] font-black ${color}">${pct}%</span></td>
+                        </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ` : ''}
+
+          ${beh.length ? `
+            <h4 class="font-black text-slate-900 mb-2 text-sm">🎭 آخر Comportementيات</h4>
+            <div class="flex flex-wrap gap-2">
+              ${beh.slice(0,10).map(b => `
+                <span class="rounded-full px-3 py-1 text-[11px] font-black bg-purple-50 text-purple-700 ring-1 ring-purple-200">
+                  ${escapeHtml(b.issueLabel||b.issue||'سلوك')} · ${formatDate(b.date)}
+                </span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50 flex gap-2">
+          <button id="stClose2" class="btn btn-white flex-1">إغلاق</button>
+        </div>
+      </div>
+    </div>`;
+
+  const close = () => { host.classList.add('hidden'); host.innerHTML=''; };
+  $('#stClose').onclick = close;
+  $('#stClose2').onclick = close;
+  host.onclick = e => { if (e.target === host) close(); };
+}
+
+/* ==========================================================
+   12) Comportement
+   ========================================================== */
+function renderBehaviorGroups() {
+  const term = ($('#behaviorSearch')?.value || '').trim().toLowerCase();
+  let list = state.students;
+  if (term) list = list.filter(s => String(s.name||'').toLowerCase().includes(term) || String(s.code||'').toLowerCase().includes(term));
+
+  const groups = groupStudents(list);
+  const container = $('#behaviorGroups');
+
+  if (!groups.length) {
+    container.innerHTML = `
+      <div class="card p-10 text-center">
+        <div class="w-16 h-16 mx-auto rounded-3xl bg-slate-100 text-slate-400 grid place-items-center text-3xl mb-4">📭</div>
+        <p class="font-black text-slate-900 text-lg">مفيش طلاب</p>
+        <p class="text-sm text-slate-500 font-semibold mt-1.5">اImporter un fichier Excel الأول.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = groups.map((g, gi) => `
+    <div class="card overflow-hidden anim-fade" style="animation-delay:${gi*40}ms">
+      <div class="px-5 py-4 border-b border-slate-100 bg-gradient-to-l from-purple-50 to-white flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-purple-600 text-white grid place-items-center text-xl shadow-lg shadow-purple-600/25">🎭</div>
+          <div>
+            <p class="font-black text-slate-900">${escapeHtml(g.time)}</p>
+            <p class="text-[11px] text-slate-500 font-bold">${escapeHtml(g.stage)} · ${g.students.length} طالب</p>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        ${g.students.map(s => {
+          const count = state.behavior.filter(x => x.studentId === s.id).length;
+          return `
+            <button data-mark-behavior="${s.id}" class="text-right rounded-2xl border-2 border-slate-100 bg-white hover:border-purple-300 hover:bg-purple-50/40 p-4 transition group">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-purple-600 text-white grid place-items-center font-black text-sm shrink-0">${escapeHtml(initials(s.name))}</div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-black text-slate-900 text-sm truncate">${escapeHtml(s.name)}</p>
+                  <p class="text-[11px] text-slate-500 font-bold font-mono">${escapeHtml(s.code||'—')}</p>
+                </div>
+                ${count > 0 ? `<span class="rounded-full px-2 py-0.5 text-[10px] font-black bg-purple-100 text-purple-700 shrink-0">${count}</span>` : ''}
+              </div>
+              <div class="mt-3 flex items-center gap-1.5 text-purple-600 font-black text-[11px]">
+                <span>تسجيل سلوك</span>
+                <span class="group-hover:-translate-x-0.5 transition">←</span>
+              </div>
+            </button>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+$('#behaviorSearch')?.addEventListener('input', renderBehaviorGroups);
+
+$('#behaviorTodayBtn')?.addEventListener('click', () => {
+  const today = todayISO();
+  const list = state.behavior.filter(b => b.date === today);
+  const host = $('#modalHost');
+  host.classList.remove('hidden');
+
+  if (!list.length) {
+    host.innerHTML = `
+      <div class="min-h-full flex items-center justify-center py-6">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl anim-pop text-center">
+          <div class="w-16 h-16 mx-auto rounded-3xl bg-purple-50 text-purple-600 grid place-items-center text-3xl mb-4">🎭</div>
+          <p class="font-black text-slate-900 text-lg">مفيش سلوكيات مسجّلة النهاردة</p>
+          <p class="text-sm text-slate-500 font-semibold mt-1.5">لسه محدش سجّل أي سلوك النهاردة.</p>
+          <button id="btClose" class="btn btn-purple w-full mt-5">تمام</button>
+        </div>
+      </div>`;
+    $('#btClose').onclick = () => { host.classList.add('hidden'); host.innerHTML=''; };
+    host.onclick = e => { if (e.target === host) { host.classList.add('hidden'); host.innerHTML=''; } };
+    return;
+  }
+
+  host.innerHTML = `
+    <div class="min-h-full flex items-start sm:items-center justify-center py-6">
+      <div class="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-2xl anim-pop overflow-hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-lg text-slate-900">🎭 سلوكيات النهاردة (${list.length})</h3>
+          <button id="btClose" class="w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition grid place-items-center">✕</button>
+        </div>
+        <div class="space-y-2 max-h-[65vh] overflow-y-auto">
+          ${list.map(b => `
+            <div class="rounded-2xl border border-purple-100 bg-purple-50/40 p-3 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-600 text-white grid place-items-center font-black text-xs shrink-0">${escapeHtml(initials(b.studentName||''))}</div>
+              <div class="min-w-0 flex-1">
+                <p class="font-black text-slate-900 text-sm truncate">${escapeHtml(b.studentName||'—')}</p>
+                <p class="text-[11px] font-bold text-purple-700">${escapeHtml(b.issueLabel||b.issue||'')}</p>
+              </div>
+              <span class="text-[10px] font-black text-slate-500 font-mono shrink-0">${escapeHtml(b.time||'')}</span>
+            </div>
+          `).join('')}
+        </div>
+        <button id="btClose2" class="btn btn-white w-full mt-4">إغلاق</button>
+      </div>
+    </div>`;
+
+  const close = () => { host.classList.add('hidden'); host.innerHTML=''; };
+  $('#btClose').onclick = close;
+  $('#btClose2').onclick = close;
+  host.onclick = e => { if (e.target === host) close(); };
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-mark-behavior]');
+  if (!btn) return;
+  const s = state.students.find(x => x.id === btn.dataset.markBehavior);
+  if (!s) return;
+  showBehaviorModal(s);
+});
+
+function showBehaviorModal(s) {
+  const host = $('#modalHost');
+  host.classList.remove('hidden');
+  host.innerHTML = `
+    <div class="min-h-full flex items-start sm:items-center justify-center py-6">
+      <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl anim-pop overflow-hidden">
+        <div class="bg-gradient-to-l from-purple-600 to-purple-800 p-5 text-white relative">
+          <button id="behClose" class="absolute top-4 left-4 w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 text-white grid place-items-center transition">✕</button>
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-3xl bg-white/20 backdrop-blur grid place-items-center font-black text-xl ring-2 ring-white/30">${escapeHtml(initials(s.name))}</div>
+            <div class="min-w-0">
+              <p class="text-[11px] font-black text-white/80 uppercase tracking-wide">تسجيل سلوك</p>
+              <h3 class="text-lg font-black truncate">${escapeHtml(s.name)}</h3>
+              <p class="text-[11px] font-bold text-white/90 font-mono">${escapeHtml(s.code||'—')} · ${escapeHtml(s.stage||'')}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5 max-h-[70vh] overflow-y-auto">
+          <p class="font-black text-slate-900 mb-3 text-sm">🎯 اختر Comportement اللي حصل:</p>
+          <div class="grid sm:grid-cols-2 gap-2">
+            ${BEHAVIOR_ISSUES.map(b => `
+              <button data-beh-key="${b.key}" data-beh-label="${escapeHtml(b.label)}"
+                class="beh-opt text-right rounded-2xl border-2 border-slate-100 bg-white hover:border-purple-300 hover:bg-purple-50/40 p-3 transition flex items-center gap-3">
+                <span class="text-2xl shrink-0">${b.icon}</span>
+                <span class="font-black text-slate-800 text-sm flex-1">${escapeHtml(b.label)}</span>
+                <span class="text-purple-600 font-black">←</span>
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="mt-5">
+            <label class="label" for="behNotes">📝 ملاحظات (اختياري)</label>
+            <input id="behNotes" class="input" placeholder="أي تفاصيل إضافية...">
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  const close = () => { host.classList.add('hidden'); host.innerHTML=''; };
+  $('#behClose').onclick = close;
+  host.onclick = e => { if (e.target === host) close(); };
+
+  $$('.beh-opt').forEach(b => b.addEventListener('click', async () => {
+    const issueKey = b.dataset.behKey;
+    const issueLabel = b.dataset.behLabel;
+    const notes = $('#behNotes').value.trim();
+
+    if (!db) return toast('لم يتم ضبط Firebase','error');
+
+    b.disabled = true;
+    const orig = b.innerHTML;
+    b.innerHTML = `<span class="text-sm font-black text-purple-700">⏳ جارٍ الحفظ...</span>`;
+
+    const timeStr = nowTime();
+    const payload = {
+      studentId:    s.id,
+      studentName:  s.name || '',
+      studentCode:  normalizeCode(s.code || ''),
+      studentStage: s.stage || '',
+      studentTime:  s.time || '',
+      issue:        issueKey,
+      issueLabel:   issueLabel,
+      notes:        notes,
+      date:         todayISO(),
+      time:         timeStr,
+      createdAt:    serverTimestamp()
+    };
+
+    try {
+      await addDoc(collection(db,'behavior'), payload);
+      toast(`تم تسجيل: ${issueLabel} · ${timeStr} ✅`,'success');
+      close();
+      if (state.currentView === 'viewBehavior') renderBehaviorGroups();
+    } catch (err) {
+      console.error(err);
+      toast('فشل الحفظ: '+err.message,'error');
+      b.disabled = false;
+      b.innerHTML = orig;
+    }
+  }));
+}
+
+/* ==========================================================
+   13) Tous les cours
+   ========================================================== */
+function renderRecords() {
+  const term = ($('#recordsSearch')?.value || '').trim().toLowerCase();
+  const m = $('#recordsMonthFilter')?.value || '';
+
+  let list = state.sessions.slice();
+  if (term) list = list.filter(s => String(s.studentName||'').toLowerCase().includes(term));
+  if (m) list = list.filter(s => String(s.date||'').startsWith(m));
+
+  const present = list.filter(s=>s.attendance==='present').length;
+  const money = list.reduce((a,s)=>a+(Number(s.sheet||s.amount)||0),0);
+  const hwNot = list.filter(s=>s.homework==='not_done').length;
+
+  $('#recordsSummary').textContent =
+    `${list.length} حصة · ${present} حضور · ${list.length-present} غياب · واجب ما اتعملش ${hwNot} · إجمالي ${formatMoney(money)}`;
+
+  const body = $('#recordsBody');
+  if (!list.length) {
+    body.innerHTML = `<tr><td colspan="6" class="td text-center text-slate-400 py-10">لا توجد حصص مسجّلة 📊</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = list.slice(0,200).map(s => {
+    const amt = Number(s.sheet||s.amount)||0;
+    return `
+      <tr class="hover:bg-slate-50/70 transition">
+        <td class="td font-bold">${formatDate(s.date)}</td>
+        <td class="td font-mono text-blue-600 text-xs">${escapeHtml(s.time||'—')}</td>
+        <td class="td font-bold text-slate-900">${escapeHtml(s.studentName||'—')}</td>
+        <td class="td">
+          ${s.attendance === 'present'
+            ? `<span class="rounded-full px-2.5 py-1 text-[11px] font-black bg-ita-greenLight text-ita-green">✅ Présent</span>`
+            : `<span class="rounded-full px-2.5 py-1 text-[11px] font-black bg-ita-redLight text-ita-red">❌ Absent</span>`}
+        </td>
+        <td class="td">
+          ${s.homework === 'done'
+            ? `<span class="rounded-full px-2.5 py-1 text-[11px] font-black bg-ita-greenLight text-ita-green">📗 عمل</span>`
+            : s.homework === 'not_done'
+              ? `<span class="rounded-full px-2.5 py-1 text-[11px] font-black bg-rose-100 text-rose-700" title="${escapeHtml(s.homeworkReason||'')}">📕 ${escapeHtml((s.homeworkReason||'').slice(0,16))}</span>`
+              : `<span class="text-slate-400 text-[11px]">—</span>`}
+        </td>
+        <td class="td font-black ${amt>0?'text-ita-green':'text-slate-400'}">${amt>0?formatMoney(amt):'لم يدفع'}</td>
+      </tr>`;
+  }).join('');
+}
+
+$('#recordsSearch')?.addEventListener('input', renderRecords);
+$('#recordsMonthFilter')?.addEventListener('change', renderRecords);
+
+function buildRecordsMonthFilter() {
+  const sel = $('#recordsMonthFilter');
+  if (!sel) return;
+  const months = [...new Set(state.sessions.map(s => String(s.date||'').slice(0,7)).filter(Boolean))]
+    .sort((a,b)=>b.localeCompare(a));
+  sel.innerHTML = '<option value="">كل الشهور</option>' +
+    months.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+/* ==========================================================
+   14) كل Examensات
+   ========================================================== */
+function renderExamsList() {
+  const term = ($('#examsSearch')?.value || '').trim().toLowerCase();
+  const m = $('#examsMonthFilter')?.value || '';
+
+  let list = state.exams.slice();
+  if (term) list = list.filter(s => String(s.studentName||'').toLowerCase().includes(term));
+  if (m) list = list.filter(s => String(s.date||'').startsWith(m));
+
+  const avg = list.length
+    ? Math.round(list.reduce((a,x)=>a+(Number(x.percentage)||0),0) / list.length * 10) / 10
+    : 0;
+
+  $('#examsSummary').textContent = `${list.length} امتحان · متوسط النسبة ${avg}%`;
+
+  const body = $('#examsBody');
+  if (!list.length) {
+    body.innerHTML = `<tr><td colspan="6" class="td text-center text-slate-400 py-10">لا توجد امتحانات مسجّلة 🏆</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = list.slice(0,200).map(x => {
+    const pct = Number(x.percentage)||0;
+    const color = pct >= 80 ? 'bg-ita-greenLight text-ita-green' : pct >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-ita-redLight text-ita-red';
+    return `
+      <tr class="hover:bg-slate-50/70 transition">
+        <td class="td font-bold">${formatDate(x.date)}</td>
+        <td class="td font-mono text-blue-600 text-xs">${escapeHtml(x.time||'—')}</td>
+        <td class="td font-bold text-slate-900">${escapeHtml(x.studentName||'—')}</td>
+        <td class="td text-slate-600 text-xs">${escapeHtml(x.group||x.studentTime||'—')}</td>
+        <td class="td font-black text-slate-900">${fmtNum(x.score)} / ${fmtNum(x.total)}</td>
+        <td class="td"><span class="rounded-full px-2.5 py-1 text-[11px] font-black ${color}">${pct}%</span></td>
+      </tr>`;
+  }).join('');
+}
+
+$('#examsSearch')?.addEventListener('input', renderExamsList);
+$('#examsMonthFilter')?.addEventListener('change', renderExamsList);
+
+function buildExamsMonthFilter() {
+  const sel = $('#examsMonthFilter');
+  if (!sel) return;
+  const months = [...new Set(state.exams.map(s => String(s.date||'').slice(0,7)).filter(Boolean))]
+    .sort((a,b)=>b.localeCompare(a));
+  sel.innerHTML = '<option value="">كل الشهور</option>' +
+    months.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+/* ==========================================================
+   15) Supprimer les données
+   ========================================================== */
+async function deleteCollectionDocs(name) {
+  if (!db) throw new Error('لم يتم ضبط Firebase');
+  const snap = await getDocs(collection(db, name));
+  const refs = snap.docs.map(d => d.ref);
+  const CHUNK = 400;
+  for (let i=0;i<refs.length;i+=CHUNK) {
+    const batch = writeBatch(db);
+    refs.slice(i,i+CHUNK).forEach(r => batch.delete(r));
+    await batch.commit();
+  }
+  return refs.length;
+}
+
+async function deleteSessionsByMonth(month) {
+  if (!db) throw new Error('لم يتم ضبط Firebase');
+  const start = month + '-01';
+  const end   = month + '-31';
+  const q = query(collection(db,'sessions'), where('date','>=',start), where('date','<=',end));
+  const snap = await getDocs(q);
+  const refs = snap.docs.map(d => d.ref);
+  const CHUNK = 400;
+  for (let i=0;i<refs.length;i+=CHUNK) {
+    const batch = writeBatch(db);
+    refs.slice(i,i+CHUNK).forEach(r => batch.delete(r));
+    await batch.commit();
+  }
+  return refs.length;
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-del]');
+  if (!b) return;
+  const type = b.dataset.del;
+
+  if (type === 'students') {
+    const ok = await confirmDialog('حذف جميع Élèves', `سيتم حذف ${state.students.length} طالب نهائيًا.`, 'احذف Élèves');
+    if (!ok) return;
+    b.disabled = true; b.textContent = '⏳...';
+    try { const n = await deleteCollectionDocs('students'); toast(`تم حذف ${n} طالب`, 'success'); }
+    catch (err) { toast('فشل الحذف: '+err.message, 'error'); }
+    finally { b.disabled = false; b.textContent = 'حذف Élèves'; updateDeleteStats(); }
+    return;
+  }
+
+  if (type === 'sessions') {
+    const ok = await confirmDialog('حذف جميع Cours', `سيتم حذف ${state.sessions.length} حصة نهائيًا.`, 'احذف Cours');
+    if (!ok) return;
+    b.disabled = true; b.textContent = '⏳...';
+    try { const n = await deleteCollectionDocs('sessions'); toast(`تم حذف ${n} حصة`, 'success'); }
+    catch (err) { toast('فشل الحذف: '+err.message, 'error'); }
+    finally { b.disabled = false; b.textContent = 'حذف Cours'; updateDeleteStats(); }
+    return;
+  }
+
+  if (type === 'behavior') {
+    const ok = await confirmDialog('حذف جميع Comportementيات', `سيتم حذف ${state.behavior.length} سلوك نهائيًا.`, 'احذف Comportementيات');
+    if (!ok) return;
+    b.disabled = true; b.textContent = '⏳...';
+    try { const n = await deleteCollectionDocs('behavior'); toast(`تم حذف ${n} سلوك`, 'success'); }
+    catch (err) { toast('فشل الحذف: '+err.message, 'error'); }
+    finally { b.disabled = false; b.textContent = 'حذف Comportementيات'; updateDeleteStats(); }
+    return;
+  }
+
+  if (type === 'exams') {
+    const ok = await confirmDialog('حذف جميع Examensات', `سيتم حذف ${state.exams.length} امتحان نهائيًا.`, 'احذف Examensات');
+    if (!ok) return;
+    b.disabled = true; b.textContent = '⏳...';
+    try { const n = await deleteCollectionDocs('exams'); toast(`تم حذف ${n} امتحان`, 'success'); }
+    catch (err) { toast('فشل الحذف: '+err.message, 'error'); }
+    finally { b.disabled = false; b.textContent = 'حذف Examensات'; updateDeleteStats(); }
+    return;
+  }
+
+  if (type === 'month') {
+    const m = $('#delMonth').value;
+    if (!m) return toast('اختر الشهر أولاً', 'warn');
+    const ok = await confirmDialog('حذف Cours du mois', `سيتم حذف كل حصص شهر ${m} نهائيًا.`, 'احذف الشهر');
+    if (!ok) return;
+    b.disabled = true; b.textContent = '⏳...';
+    try { const n = await deleteSessionsByMonth(m); toast(`تم حذف ${n} حصة من شهر ${m}`, 'success'); }
+    catch (err) { toast('فشل الحذف: '+err.message, 'error'); }
+    finally { b.disabled = false; b.textContent = 'حذف Cours du mois'; updateDeleteStats(); }
+    return;
+  }
+
+  if (type === 'all') {
+    const ok = await confirmDialog('Tout supprimer', `سيتم حذف ${state.students.length} طالب و ${state.sessions.length} حصة و ${state.behavior.length} سلوك و ${state.exams.length} امتحان نهائيًا!`, 'اTout supprimer');
+    if (!ok) return;
+    b.disabled = true; b.textContent = '⏳...';
+    try {
+      const s1 = await deleteCollectionDocs('students');
+      const s2 = await deleteCollectionDocs('sessions');
+      const s3 = await deleteCollectionDocs('behavior');
+      const s4 = await deleteCollectionDocs('exams');
+      toast(`تم حذف ${s1} طالب و ${s2} حصة و ${s3} سلوك و ${s4} امتحان`, 'success');
+    } catch (err) { toast('فشل الحذف: '+err.message, 'error'); }
+    finally { b.disabled = false; b.textContent = 'Tout supprimer'; updateDeleteStats(); }
+  }
+});
+
+/* ==========================================================
+   16) 🇫🇷 Gérer الهوية: logo وbannière
+   الملفات الفعلية في Firebase Storage، وروابطها في Firestore:
+   siteSettings/branding
+   ========================================================== */
+async function loadBranding() {
+  if (!db) return;
+  try {
+    const snap = await getDoc(doc(db, 'siteSettings', 'branding'));
+    if (!snap.exists()) return;
+    const data = snap.data() || {};
+
+    if (data.logoUrl) {
+      const logo = document.querySelector('header #siteLogo');
+      if (logo) logo.src = data.logoUrl;
+    }
+
+    if (data.headerUrl) {
+      const headerImage = $('#brandHeaderImage');
+      if (headerImage) {
+        headerImage.src = data.headerUrl;
+        headerImage.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    console.warn('[Branding]', err);
+    toast('تعذر قراءة إعدادات الهوية من Firebase: ' + (err?.message || err), 'error');
+  }
+}
+
+function openBrandingDialog() {
+  const host = $('#modalHost');
+  host.classList.remove('hidden');
+  host.innerHTML = `
+    <div class="min-h-full flex items-center justify-center py-6">
+      <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl anim-pop">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="font-black text-xl text-slate-900">🇫🇷 Gérer Identité française</h3>
+            <p class="text-[12px] text-slate-500 font-semibold mt-1">Monsieur Wael Anwar</p>
+          </div>
+          <button id="brandClose" class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition grid place-items-center text-xl">✕</button>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3">
+          <button id="chooseLogo" class="btn btn-white !py-4 text-base">🖼️ Changer le logo</button>
+          <button id="chooseHeader" class="btn btn-white !py-4 text-base">🎨 Changer la bannière</button>
+        </div>
+
+        <input id="brandLogoInput" type="file" accept="image/*" class="hidden">
+        <input id="brandHeaderInput" type="file" accept="image/*" class="hidden">
+
+        <div id="brandUploadBox" class="hidden mt-5 rounded-2xl border-2 border-dashed border-slate-300 p-4">
+          <p id="brandUploadTitle" class="font-black text-slate-900"></p>
+          <p class="text-[12px] text-slate-500 font-semibold mt-1">اختار صورة، وبعدها اضغط Enregistrer dans Firebase.</p>
+          <img id="brandPreview" class="brand-upload-preview hidden mt-3" alt="Preview">
+          <div class="flex gap-2 mt-4">
+            <button id="brandSave" class="btn btn-blue flex-1">☁️ Enregistrer dans Firebase</button>
+            <button id="brandCancelPick" class="btn btn-white flex-1">إلغاء</button>
+          </div>
+          <p id="brandProgress" class="text-[11px] text-slate-500 font-bold mt-3 text-center"></p>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-blue-50 border border-blue-100 p-3">
+          <p class="text-[11px] font-black text-blue-800 mb-1">☁️ Firebase : french-a4085</p>
+          <p class="text-[12px] text-blue-900 font-bold leading-relaxed">
+            L’image sera stockée dans Firebase Storage et son lien sera enregistré dans
+            <b>siteSettings/branding</b> afin que l’autre site puisse la lire.
+          </p>
+        </div>
+      </div>
+    </div>`;
+
+  let selectedFile = null;
+  let selectedType = null;
+
+  const close = () => {
+    host.classList.add('hidden');
+    host.innerHTML = '';
+  };
+
+  const prepare = (type) => {
+    selectedType = type;
+    selectedFile = null;
+    $('#brandUploadBox').classList.remove('hidden');
+    $('#brandUploadTitle').textContent =
+      type === 'logo' ? '🖼️ ملف logo' : '🎨 ملف bannière';
+    $('#brandPreview').classList.add('hidden');
+    $('#brandPreview').removeAttribute('src');
+    $('#brandProgress').textContent = '';
+  };
+
+  const bindInput = (inputId, type) => {
+    const input = $(inputId);
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('Choisissez uniquement un fichier image', 'error');
+        input.value = '';
+        return;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        toast('L’image doit faire 8 Mo ou moins', 'error');
+        input.value = '';
+        return;
+      }
+
+      selectedType = type;
+      selectedFile = file;
+      $('#brandUploadBox').classList.remove('hidden');
+      $('#brandUploadTitle').textContent =
+        type === 'logo' ? `🖼️ ${file.name}` : `🎨 ${file.name}`;
+
+      const preview = $('#brandPreview');
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove('hidden');
+      $('#brandProgress').textContent = 'Image prête à être envoyée.';
+    };
+  };
+
+  $('#brandClose').onclick = close;
+  $('#chooseLogo').onclick = () => {
+    prepare('logo');
+    $('#brandLogoInput').click();
+  };
+  $('#chooseHeader').onclick = () => {
+    prepare('header');
+    $('#brandHeaderInput').click();
+  };
+  $('#brandCancelPick').onclick = () => {
+    selectedFile = null;
+    selectedType = null;
+    $('#brandLogoInput').value = '';
+    $('#brandHeaderInput').value = '';
+    $('#brandUploadBox').classList.add('hidden');
+  };
+
+  bindInput('#brandLogoInput', 'logo');
+  bindInput('#brandHeaderInput', 'header');
+
+  $('#brandSave').onclick = async () => {
+    if (!db || !storage) return toast('Firebase n’est pas prêt', 'error');
+    if (!selectedFile || !selectedType) return toast('اختار logo أو bannière أولاً', 'warn');
+
+    const saveBtn = $('#brandSave');
+    const progress = $('#brandProgress');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Envoi en cours...';
+    progress.textContent = 'Envoi de l’image vers Firebase Storage...';
+
+    try {
+      const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `branding/${selectedType}/${Date.now()}_${safeName}`;
+      const fileRef = storageRef(storage, path);
+
+      await uploadBytes(fileRef, selectedFile, {
+        contentType: selectedFile.type,
+        customMetadata: {
+          site: 'french-a4085',
+          type: selectedType,
+          uploadedBy: 'Monsieur Wael Anwar'
+        }
+      });
+
+      const url = await getDownloadURL(fileRef);
+      const field = selectedType === 'logo' ? 'logoUrl' : 'headerUrl';
+
+      await setDoc(doc(db, 'siteSettings', 'branding'), {
+        [field]: url,
+        [`${selectedType}Path`]: path,
+        [`${selectedType}FileName`]: selectedFile.name,
+        updatedAt: serverTimestamp(),
+        updatedBy: 'Monsieur Wael Anwar'
+      }, { merge: true });
+
+      if (selectedType === 'logo') {
+        const logo = document.querySelector('header #siteLogo');
+        if (logo) logo.src = url;
+      } else {
+        const headerImage = $('#brandHeaderImage');
+        if (headerImage) {
+          headerImage.src = url;
+          headerImage.style.display = 'block';
+        }
+      }
+
+      progress.textContent = 'Enregistré avec succès ✅';
+      toast(`تم حفظ ${selectedType === 'logo' ? 'logo' : 'bannière'} في Firebase ✅`, 'success');
+      setTimeout(close, 500);
+    } catch (err) {
+      console.error('[Branding upload]', err);
+      progress.textContent = 'حدث خطأ أثناء الرفع.';
+      toast('Échec de l’envoi de l’image : ' + (err?.message || err), 'error');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '☁️ Enregistrer dans Firebase';
+    }
+  };
+
+  host.onclick = e => {
+    if (e.target === host) close();
+  };
+}
+
+$('#btnBranding')?.addEventListener('click', openBrandingDialog);
+
+/* ==========================================================
+   16) PWA
+   ========================================================== */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
+$('#installBtn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') toast('Application installée 🎉');
+    deferredPrompt = null;
+    return;
+  }
+  if (window.matchMedia('(display-mode: standalone)').matches) return toast('التطبيق مثبّت بالفعل ✅','info');
+  toast('افتح قائمة المتصفح واختر "تثبيت التطبيق"','info');
+});
+window.addEventListener('appinstalled', () => toast('تم Installer بنجاح 🎉'));
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW failed:', err));
+  });
+}
+
+/* ==========================================================
+   17) التشغيل
+   ========================================================== */
+$('#year').textContent = new Date().getFullYear();
+resetSessionForm();
+resetExamForm();
+updateCounts();
+setConn(false);
+startListeners();
+loadBranding();
+
+setTimeout(() => { buildRecordsMonthFilter(); buildExamsMonthFilter(); }, 1500);
+let lastSessionsLen = 0, lastExamsLen = 0;
+setInterval(() => {
+  if (state.sessions.length !== lastSessionsLen) {
+    lastSessionsLen = state.sessions.length;
+    buildRecordsMonthFilter();
+  }
+  if (state.exams.length !== lastExamsLen) {
+    lastExamsLen = state.exams.length;
+    buildExamsMonthFilter();
+  }
+}, 2500);
+</script>
+
+
+/* INSTALL-BUTTON-FIX-START */
+(function () {
+  'use strict';
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.matchMedia('(display-mode: fullscreen)').matches ||
+           window.navigator.standalone === true ||
+           document.referrer.startsWith('android-app://');
+  }
+
+  function isIOSBrowser() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  function isIOSStandalone() {
+    return isIOSBrowser() && window.navigator.standalone === true;
+  }
+
+  function isChromiumBrowser() {
+    const ua = navigator.userAgent;
+    return /Chrome|Chromium|Edg|OPR/i.test(ua) &&
+           !/SamsungBrowser|Firefox|CriOS|FxiOS/i.test(ua);
+  }
+
+  function isSupportedInstallBrowser() {
+    // Android Chrome/Chromium and desktop Chromium-based browsers
+    // expose beforeinstallprompt when the PWA is actually installable.
+    return isChromiumBrowser() && !isStandalone();
+  }
+
+  let deferredInstallPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    updateInstallButton();
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferredInstallPrompt = null;
+    updateInstallButton();
+  });
+
+  function findInstallButtons() {
+    return Array.from(document.querySelectorAll('button, a, [role="button"]'))
+      .filter(function (el) {
+        const t = (el.textContent || '').trim().toLowerCase();
+        const aria = (el.getAttribute('aria-label') || '').trim().toLowerCase();
+        return /install|تثبيت|تنزيل الموقع|تنزيل التطبيق/.test(t + ' ' + aria);
+      });
+  }
+
+  function updateInstallButton() {
+    findInstallButtons().forEach(function (button) {
+      // Never show an install control when the site is already installed.
+      if (isStandalone() || isIOSStandalone()) {
+        button.hidden = true;
+        button.style.display = 'none';
+        return;
+      }
+
+      // On non-Chromium browsers, do not expose a fake Install button.
+      // On Chromium, only show it when the browser supplied a real
+      // beforeinstallprompt event.
+      const show = isSupportedInstallBrowser() && !!deferredInstallPrompt;
+      button.hidden = !show;
+      button.style.display = show ? '' : 'none';
+    });
+  }
+
+  async function handleInstallClick(event) {
+    if (!deferredInstallPrompt) {
+      event.preventDefault();
+      updateInstallButton();
+      return;
+    }
+
+    event.preventDefault();
+
+    const promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+
+    try {
+      await promptEvent.prompt();
+      await promptEvent.userChoice;
+    } catch (error) {
+      console.warn('PWA install prompt failed:', error);
+    } finally {
+      updateInstallButton();
+    }
+  }
+
+  function wireInstallButtons() {
+    findInstallButtons().forEach(function (button) {
+      if (button.dataset.pwaInstallWired === '1') return;
+      button.dataset.pwaInstallWired = '1';
+      button.addEventListener('click', handleInstallClick, true);
+    });
+    updateInstallButton();
+  }
+
+  // Keep checking because the existing app may create the Install button
+  // dynamically after Firebase/UI initialization.
+  wireInstallButtons();
+  new MutationObserver(wireInstallButtons).observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  window.addEventListener('load', updateInstallButton);
+  document.addEventListener('visibilitychange', updateInstallButton);
+})();
+ /* INSTALL-BUTTON-FIX-END */
+
+</body>
+</html>
