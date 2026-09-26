@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" dir="rtl">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -47,6 +47,8 @@
   }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn:focus { outline: none; }
+  .btn:focus-visible { outline: 3px solid rgba(0,85,164,.45); outline-offset: 2px; }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(0,85,164,.45); outline-offset: 2px; }
 
   .btn-green { background-color: #0055A4; color: #fff; box-shadow: 0 10px 15px -3px rgba(0,85,164,.25), 0 4px 6px -4px rgba(0,85,164,.25); }
   .btn-green:hover { background-color: #003f7d; }
@@ -100,12 +102,13 @@
 
   /* حقول Examens الكبيرة */
   .exam-input {
-    width: 100%; border-radius: 1rem; padding: 1.5rem 1.25rem;
-    font-size: 2.5rem; font-weight: 900; text-align: center;
+    width: 100%; border-radius: 1rem; padding: clamp(1rem,4vw,1.5rem) clamp(0.75rem,3vw,1.25rem);
+    font-size: clamp(1.9rem, 9vw, 2.5rem); font-weight: 900; text-align: center;
     outline: none; transition: all 0.2s ease; font-family: inherit;
     line-height: 1; border: 3px solid #e2e8f0; background-color: #f8fafc;
+    max-width: 100%; box-sizing: border-box;
   }
-  .exam-input::placeholder { color: #cbd5e1; font-size: 1.5rem; font-weight: 800; }
+  .exam-input::placeholder { color: #cbd5e1; font-size: clamp(1.1rem,4.5vw,1.5rem); font-weight: 800; }
   .exam-input-total { border-color: #99f6e4; background-color: #f0fdfa; color: #115e59; }
   .exam-input-total:focus { border-color: #0d9488; box-shadow: 0 0 0 5px rgba(13,148,136,.12); }
   .exam-input-score { border-color: #fecdd3; background-color: #fff1f2; color: #c92f25; }
@@ -117,22 +120,45 @@
 </style>
 
 <style>
-  *{ -webkit-tap-highlight-color: transparent; }
-  html{ scroll-behavior:smooth; }
-  body{ font-family:'Cairo',system-ui,sans-serif; }
+  /* ===== أساسيات الاستجابة — تمنع أي تكسير أو زووم غير مرغوب على أي شاشة ===== */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  body {
+    font-family:'Cairo',system-ui,sans-serif;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  img, svg, video { max-width: 100%; height: auto; }
+  * { -webkit-tap-highlight-color: transparent; }
+
   ::-webkit-scrollbar{ width:9px; height:9px; }
   ::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:9999px; }
   .no-scrollbar::-webkit-scrollbar{ display:none; }
   .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
 
-  @keyframes fadeUp{ from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes popIn{ from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(14px) scale(.985)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes popIn{ from{opacity:0;transform:scale(.92) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
   @keyframes slideDown{ from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
   @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
-  .anim-fade{ animation:fadeUp .35s ease both; }
-  .anim-pop { animation:popIn .22s ease both; }
+  @keyframes floatSlow{ 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-14px) translateX(8px)} }
+  @keyframes shine{ 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  .anim-fade{ animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both; }
+  .anim-pop { animation:popIn .28s cubic-bezier(.16,1,.3,1) both; }
   .anim-slide{ animation:slideDown .22s ease both; }
   .pulse-dot{ animation:pulse 1.8s cubic-bezier(.4,0,.6,1) infinite; }
+
+  /* ===== لمسة 3D خفيفة على البطاقات الرئيسية ===== */
+  main { perspective: 1200px; }
+  #viewHome .card[id^="btn"], button.card {
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  @media (hover:hover) and (pointer:fine) {
+    button.card:hover {
+      box-shadow: 0 24px 45px -20px rgba(0,85,164,.28), 0 8px 16px -8px rgba(0,0,0,.08);
+    }
+  }
+  button.card:active { transform: translateY(0) scale(.985) !important; }
 
   .flag-strip {
     background: linear-gradient(to left,
@@ -141,6 +167,20 @@
       #EF4135 66.66%, #EF4135 100%);
   }
   .copy-text { user-select: all; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* شاشات صغيرة جدًا (< 360px) */
+  @media (max-width: 359px) {
+    .card { border-radius: 1.15rem; }
+  }
 </style>
 
 <style>
@@ -191,13 +231,13 @@
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen france-theme">
 
 <!-- ============ bannière ============ -->
-<header class="sticky top-0 z-40 bg-white shadow-sm">
+<header class="sticky top-0 z-40 bg-white shadow-sm" style="padding-top:env(safe-area-inset-top, 0px)">
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="flex items-center justify-between h-16 gap-4">
       <div class="flex items-center gap-3 min-w-0">
         <img id="siteLogo" src="1.jpg" alt="Logo du site"
           class="w-11 h-11 rounded-2xl object-cover ring-2 ring-ita-green/20 shadow-sm"
-          onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect width=%2280%22 height=%2280%22 rx=%2218%22 fill=%22%23009246%22/><text x=%2240%22 y=%2252%22 font-size=%2234%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22>IT</text></svg>'">
+          onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect width=%2280%22 height=%2280%22 rx=%2218%22 fill=%22%230055A4%22/><text x=%2240%22 y=%2252%22 font-size=%2230%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22>FR</text></svg>'">
         <div class="min-w-0">
           <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight truncate">Cours de français</h1>
           <p class="text-[11px] text-slate-500 leading-tight">Tableau de bord</p>
@@ -898,12 +938,12 @@
 
 <footer class="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-lg" style="padding-bottom:env(safe-area-inset-bottom)">
   <div class="h-1 flag-strip"></div>
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-center gap-3 relative">
-    <p class="text-[11px] sm:text-xs text-slate-600 font-bold text-center leading-tight">
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 h-auto min-h-14 py-2 flex items-center justify-between gap-2">
+    <p class="text-[10px] sm:text-xs text-slate-600 font-bold leading-tight min-w-0 truncate flex-1">
       © <span id="year"></span> Cours de français —
       <span class="font-black text-slate-900">حازم عمرو محمد عبد الرحيم</span>
     </p>
-    <button id="installBtn" class="btn btn-green !py-2 !px-3.5 text-[12px] absolute left-3 sm:left-6 top-1/2 -translate-y-1/2">
+    <button id="installBtn" class="btn btn-green !py-2 !px-3 text-[11px] sm:text-[12px] shrink-0">
       📲 Installer
     </button>
   </div>
@@ -1055,8 +1095,18 @@ function showView(id, pushHistory = true) {
 
   VIEWS.forEach(v => {
     const el = document.getElementById(v);
-    if (el) el.classList.toggle('hidden', v !== id);
+    if (!el) return;
+    el.classList.toggle('hidden', v !== id);
   });
+
+  // إعادة تشغيل انيميشن الدخول في كل مرة نتنقل فيها بين الشاشات
+  const active = document.getElementById(id);
+  if (active) {
+    active.classList.remove('anim-fade');
+    void active.offsetWidth; // إعادة تشغيل الأنيميشن (reflow)
+    active.classList.add('anim-fade');
+  }
+
   window.scrollTo({ top:0, behavior:'smooth' });
 
   if (pushHistory && id !== 'viewHome' && prev === 'viewHome') {
@@ -2609,7 +2659,7 @@ function openBrandingDialog() {
 $('#btnBranding')?.addEventListener('click', openBrandingDialog);
 
 /* ==========================================================
-   16) PWA
+   17) PWA — تثبيت التطبيق
    ========================================================== */
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
@@ -2633,9 +2683,32 @@ if ('serviceWorker' in navigator) {
 }
 
 /* ==========================================================
-   17) التشغيل
+   17) لمسة 3D خفيفة عند تحريك الماوس فوق كروت الرئيسية
+   ========================================================== */
+function enableCardTilt() {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (reduceMotion || !canHover) return;
+
+  $$('#viewHome button.card').forEach(card => {
+    card.style.transition = 'transform .15s ease, box-shadow .3s ease';
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(800px) rotateX(${(-y*6).toFixed(2)}deg) rotateY(${(x*6).toFixed(2)}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+}
+
+/* ==========================================================
+   18) التشغيل
    ========================================================== */
 $('#year').textContent = new Date().getFullYear();
+enableCardTilt();
 resetSessionForm();
 resetExamForm();
 updateCounts();
@@ -2657,8 +2730,7 @@ setInterval(() => {
 }, 2500);
 </script>
 
-
-/* INSTALL-BUTTON-FIX-START */
+<script>
 (function () {
   'use strict';
 
@@ -2684,8 +2756,6 @@ setInterval(() => {
   }
 
   function isSupportedInstallBrowser() {
-    // Android Chrome/Chromium and desktop Chromium-based browsers
-    // expose beforeinstallprompt when the PWA is actually installable.
     return isChromiumBrowser() && !isStandalone();
   }
 
@@ -2713,16 +2783,12 @@ setInterval(() => {
 
   function updateInstallButton() {
     findInstallButtons().forEach(function (button) {
-      // Never show an install control when the site is already installed.
       if (isStandalone() || isIOSStandalone()) {
         button.hidden = true;
         button.style.display = 'none';
         return;
       }
 
-      // On non-Chromium browsers, do not expose a fake Install button.
-      // On Chromium, only show it when the browser supplied a real
-      // beforeinstallprompt event.
       const show = isSupportedInstallBrowser() && !!deferredInstallPrompt;
       button.hidden = !show;
       button.style.display = show ? '' : 'none';
@@ -2760,8 +2826,6 @@ setInterval(() => {
     updateInstallButton();
   }
 
-  // Keep checking because the existing app may create the Install button
-  // dynamically after Firebase/UI initialization.
   wireInstallButtons();
   new MutationObserver(wireInstallButtons).observe(document.documentElement, {
     childList: true,
@@ -2771,7 +2835,7 @@ setInterval(() => {
   window.addEventListener('load', updateInstallButton);
   document.addEventListener('visibilitychange', updateInstallButton);
 })();
- /* INSTALL-BUTTON-FIX-END */
+</script>
 
 </body>
 </html>
