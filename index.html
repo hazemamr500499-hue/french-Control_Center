@@ -2512,6 +2512,10 @@ function openBrandingDialog() {
             <button id="brandCancelPick" class="btn btn-white flex-1">إلغاء</button>
           </div>
           <p id="brandProgress" class="text-[11px] text-slate-500 font-bold mt-3 text-center"></p>
+          <div id="brandErrorBox" class="hidden mt-3 rounded-xl border-2 border-rose-200 bg-rose-50 p-3">
+            <p class="text-[12px] font-black text-rose-700">⚠️ حصلت مشكلة</p>
+            <p id="brandErrorText" class="text-[11px] text-rose-600 font-bold mt-1 leading-relaxed break-words"></p>
+          </div>
         </div>
 
         <div class="mt-4 rounded-2xl bg-blue-50 border border-blue-100 p-3">
@@ -2521,6 +2525,9 @@ function openBrandingDialog() {
             <b>siteSettings/branding</b> afin que l’autre site puisse la lire.
           </p>
         </div>
+        <p class="mt-2 text-[10px] text-slate-400 font-bold leading-relaxed text-center">
+          لو ظهر خطأ "غير مسموح" — لازم تفتح Firebase Console ← Storage ← Rules وتسمح بالكتابة.
+        </p>
       </div>
     </div>`;
 
@@ -2541,6 +2548,7 @@ function openBrandingDialog() {
     $('#brandPreview').classList.add('hidden');
     $('#brandPreview').removeAttribute('src');
     $('#brandProgress').textContent = '';
+    $('#brandErrorBox').classList.add('hidden');
   };
 
   const bindInput = (inputId, type) => {
@@ -2569,6 +2577,7 @@ function openBrandingDialog() {
       preview.src = URL.createObjectURL(file);
       preview.classList.remove('hidden');
       $('#brandProgress').textContent = 'Image prête à être envoyée.';
+      $('#brandErrorBox').classList.add('hidden');
     };
   };
 
@@ -2598,34 +2607,56 @@ function openBrandingDialog() {
 
     const saveBtn = $('#brandSave');
     const progress = $('#brandProgress');
+    const errBox = $('#brandErrorBox');
+    const errText = $('#brandErrorText');
+    errBox.classList.add('hidden');
     saveBtn.disabled = true;
     saveBtn.textContent = '⏳ Envoi en cours...';
-    progress.textContent = 'Envoi de l’image vers Firebase Storage...';
+
+    // مهلة قصوى 25 ثانية — عشان الزرار ميفضلش عالق لو الاتصال بفايربيز اتعلق
+    const withTimeout = (promise, ms, stepLabel) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(
+        () => reject(new Error(`انتهت المهلة أثناء: ${stepLabel} (تأكد إن Firebase Storage مُفعّل ومسموح بالكتابة فيه)`)),
+        ms
+      ))
+    ]);
 
     try {
       const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = `branding/${selectedType}/${Date.now()}_${safeName}`;
       const fileRef = storageRef(storage, path);
 
-      await uploadBytes(fileRef, selectedFile, {
-        contentType: selectedFile.type,
-        customMetadata: {
-          site: 'french-a4085',
-          type: selectedType,
-          uploadedBy: 'Monsieur Wael Anwar'
-        }
-      });
+      progress.textContent = '1/3 — Envoi de l’image vers Firebase Storage...';
+      await withTimeout(
+        uploadBytes(fileRef, selectedFile, {
+          contentType: selectedFile.type,
+          customMetadata: {
+            site: 'french-a4085',
+            type: selectedType,
+            uploadedBy: 'Monsieur Wael Anwar'
+          }
+        }),
+        25000,
+        'رفع الصورة إلى Storage'
+      );
 
-      const url = await getDownloadURL(fileRef);
+      progress.textContent = '2/3 — Récupération du lien de l’image...';
+      const url = await withTimeout(getDownloadURL(fileRef), 15000, 'الحصول على رابط الصورة');
+
+      progress.textContent = '3/3 — Enregistrement dans la base de données...';
       const field = selectedType === 'logo' ? 'logoUrl' : 'headerUrl';
-
-      await setDoc(doc(db, 'siteSettings', 'branding'), {
-        [field]: url,
-        [`${selectedType}Path`]: path,
-        [`${selectedType}FileName`]: selectedFile.name,
-        updatedAt: serverTimestamp(),
-        updatedBy: 'Monsieur Wael Anwar'
-      }, { merge: true });
+      await withTimeout(
+        setDoc(doc(db, 'siteSettings', 'branding'), {
+          [field]: url,
+          [`${selectedType}Path`]: path,
+          [`${selectedType}FileName`]: selectedFile.name,
+          updatedAt: serverTimestamp(),
+          updatedBy: 'Monsieur Wael Anwar'
+        }, { merge: true }),
+        15000,
+        'الحفظ في Firestore'
+      );
 
       if (selectedType === 'logo') {
         const logo = document.querySelector('header #siteLogo');
@@ -2640,11 +2671,19 @@ function openBrandingDialog() {
 
       progress.textContent = 'Enregistré avec succès ✅';
       toast(`تم حفظ ${selectedType === 'logo' ? 'logo' : 'bannière'} في Firebase ✅`, 'success');
-      setTimeout(close, 500);
+      setTimeout(close, 700);
     } catch (err) {
       console.error('[Branding upload]', err);
-      progress.textContent = 'حدث خطأ أثناء الرفع.';
-      toast('Échec de l’envoi de l’image : ' + (err?.message || err), 'error');
+      const code = err?.code ? ` (${err.code})` : '';
+      const readable = /unauthorized|permission/i.test(err?.code || err?.message || '')
+        ? 'ممنوع الكتابة في Firebase Storage — لازم تعدّل قواعد الأمان (Storage Rules) من لوحة تحكم Firebase وتسمح بالكتابة، أو تفعّل خدمة Storage لو لسه ما اتفعّلتش.'
+        : /storage\/unknown|network/i.test(err?.code || err?.message || '')
+          ? 'تعذّر الوصول لـ Firebase Storage — تأكد إن خدمة Storage مفعّلة في مشروع french-a4085 وإن اسم الـ bucket صحيح.'
+          : (err?.message || String(err));
+      progress.textContent = '❌ فشلت العملية';
+      errText.textContent = readable + code;
+      errBox.classList.remove('hidden');
+      toast('فشل رفع الصورة — التفاصيل تحت الزرار', 'error');
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = '☁️ Enregistrer dans Firebase';
